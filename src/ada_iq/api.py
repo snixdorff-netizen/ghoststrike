@@ -139,6 +139,16 @@ def login(request: AuthRequest) -> dict:
         raise HTTPException(status_code=401, detail=str(exc)) from exc
 
 
+@app.post("/auth/demo")
+def demo_login() -> dict:
+    if not settings.demo_account_enabled or not settings.public_demo_access_enabled:
+        raise HTTPException(status_code=403, detail="Public demo access is disabled.")
+    try:
+        return orchestrator.create_session_for_email(settings.demo_account_email)
+    except ValueError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
 @app.post("/auth/logout")
 def logout(user: dict = Depends(current_user), authorization: str | None = Header(default=None)) -> dict:
     token = _extract_token(authorization)
@@ -347,6 +357,7 @@ def get_access_summary() -> dict:
         "alpha_mode": not settings.open_registration,
         "build_label": settings.build_label,
         "demo_account_enabled": settings.demo_account_enabled,
+        "public_demo_access_enabled": settings.public_demo_access_enabled,
         "demo_account_email": settings.demo_account_email if settings.demo_account_enabled else None,
         "demo_account_password": settings.demo_account_password if settings.demo_account_enabled else None,
     }

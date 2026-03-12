@@ -30,11 +30,14 @@
         <aside class="hero-aside panel">
           <h2>First Session</h2>
           <ol class="quick-steps">
-            <li>Log in with the credentials provided by the GhostStrike team.</li>
+            <li>Enter the demo workspace instantly or log in with team credentials.</li>
             <li>Create a project or accept an invitation token.</li>
             <li>Run <strong>V1 Package</strong> for the fastest end-to-end test.</li>
             <li>Review outputs and submit project feedback.</li>
           </ol>
+          <div class="hero-actions">
+            <button id="hero-demo-button" type="button" class="hidden">Enter Demo Workspace</button>
+          </div>
         </aside>
       </section>
 
@@ -152,75 +155,81 @@
               </div>
             </div>
 
-            <div class="status-strip">
-              <div>
-                <span class="label">Current Phase</span>
-                <strong id="detail-phase"></strong>
-              </div>
-              <div>
-                <span class="label">Status</span>
-                <strong id="detail-status"></strong>
-              </div>
-              <div>
-                <span class="label">Gate</span>
-                <strong id="detail-gate"></strong>
-              </div>
-              <div>
-                <span class="label">Owner</span>
-                <strong id="detail-owner"></strong>
-              </div>
-            </div>
-
-            <section class="phase-panel">
-              <div class="panel-heading">
-                <h3>Workflow Progress</h3>
-                <p>Track where the project is now and what comes next.</p>
-              </div>
-              <div id="phase-rail" class="phase-rail"></div>
-            </section>
-
-            <section class="insight-panel">
-              <div class="panel-heading">
-                <h3>Project Snapshot</h3>
-                <p>A quick read on project momentum, ownership, and next action.</p>
-              </div>
-              <div id="project-insights" class="insight-grid"></div>
-            </section>
-
-            <p id="detail-brief" class="brief"></p>
-
-            <section class="workflow-panel">
-              <div class="panel-heading">
-                <h3>Workflow Actions</h3>
-                <div id="action-hint">Select a project to begin.</div>
-              </div>
-              <div class="action-groups">
-                <div class="actions primary-actions">
-                  <button id="run-phase-button" type="button">Run Current Phase</button>
-                  <button id="run-v1-button" type="button">Run V1 Package</button>
-                  <button id="approve-button" type="button">Approve Gate</button>
+            <section class="detail-overview">
+              <div class="stage-main">
+                <div class="status-strip">
+                  <div>
+                    <span class="label">Current Phase</span>
+                    <strong id="detail-phase"></strong>
+                  </div>
+                  <div>
+                    <span class="label">Status</span>
+                    <strong id="detail-status"></strong>
+                  </div>
+                  <div>
+                    <span class="label">Gate</span>
+                    <strong id="detail-gate"></strong>
+                  </div>
+                  <div>
+                    <span class="label">Owner</span>
+                    <strong id="detail-owner"></strong>
+                  </div>
                 </div>
-                <div class="actions secondary-actions">
-                  <button id="refresh-button" type="button" class="ghost">Refresh</button>
-                  <button id="queue-phase-button" type="button" class="ghost">Queue Current Phase</button>
-                  <button id="run-full-cycle-button" type="button">Run Full Cycle</button>
-                  <button id="reject-button" type="button" class="ghost">Reject Gate</button>
-                </div>
+
+                <section class="phase-panel">
+                  <div class="panel-heading">
+                    <h3>Workflow Progress</h3>
+                    <p>Track where the project is now and what comes next.</p>
+                  </div>
+                  <div id="phase-rail" class="phase-rail"></div>
+                </section>
+
+                <section class="insight-panel">
+                  <div class="panel-heading">
+                    <h3>Project Snapshot</h3>
+                    <p>A quick read on project momentum, ownership, and next action.</p>
+                  </div>
+                  <div id="project-insights" class="insight-grid"></div>
+                </section>
+
+                <p id="detail-brief" class="brief"></p>
               </div>
-              <label class="feedback-box">
-                <span>Decision Feedback</span>
-                <textarea id="decision-feedback" rows="3" placeholder="Add reviewer notes when approving or rejecting a gate."></textarea>
-              </label>
+
+              <aside class="stage-side">
+                <section class="workflow-panel">
+                  <div class="panel-heading">
+                    <h3>Workflow Actions</h3>
+                    <div id="action-hint">Select a project to begin.</div>
+                  </div>
+                  <div class="action-groups">
+                    <div class="actions primary-actions">
+                      <button id="run-phase-button" type="button">Run Current Phase</button>
+                      <button id="run-v1-button" type="button">Run V1 Package</button>
+                      <button id="approve-button" type="button">Approve Gate</button>
+                    </div>
+                    <div class="actions secondary-actions">
+                      <button id="refresh-button" type="button" class="ghost">Refresh</button>
+                      <button id="queue-phase-button" type="button" class="ghost">Queue Current Phase</button>
+                      <button id="run-full-cycle-button" type="button">Run Full Cycle</button>
+                      <button id="reject-button" type="button" class="ghost">Reject Gate</button>
+                    </div>
+                  </div>
+                  <label class="feedback-box">
+                    <span>Decision Feedback</span>
+                    <textarea id="decision-feedback" rows="3" placeholder="Add reviewer notes when approving or rejecting a gate."></textarea>
+                  </label>
+                </section>
+              </aside>
             </section>
 
             <div class="content-grid">
               <section class="content-main">
-                <section>
+                <section class="output-stage">
                   <h3>Agent Outputs</h3>
                   <p class="section-copy">Decision-oriented summaries from the current workflow state.</p>
                   <div id="outputs" class="card-stack"></div>
                 </section>
-                <section>
+                <section class="support-stage">
                   <h3>Message Log</h3>
                   <p class="section-copy">Runs, messages, and handoffs across the workflow.</p>
                   <div id="messages" class="card-stack compact"></div>

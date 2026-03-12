@@ -15,6 +15,7 @@ class Settings:
     bootstrap_admin_password: str | None
     build_label: str
     demo_account_enabled: bool
+    public_demo_access_enabled: bool
     demo_account_email: str
     demo_account_password: str
 
@@ -36,6 +37,7 @@ def load_settings() -> Settings:
         bootstrap_admin_password=os.getenv("ADA_IQ_BOOTSTRAP_ADMIN_PASSWORD"),
         build_label=os.getenv("ADA_IQ_BUILD_LABEL", "Alpha Build"),
         demo_account_enabled=_bool_env("ADA_IQ_ENABLE_DEMO_ACCOUNT", True),
+        public_demo_access_enabled=_bool_env("ADA_IQ_PUBLIC_DEMO_ACCESS", False),
         demo_account_email=os.getenv("ADA_IQ_DEMO_ACCOUNT_EMAIL", "demo@adaiq.local"),
         demo_account_password=os.getenv("ADA_IQ_DEMO_ACCOUNT_PASSWORD", "demo12345"),
     )

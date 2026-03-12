@@ -68,6 +68,14 @@ class Orchestrator:
         session = self.store.create_session(Session(user_id=user.user_id, token=new_session_token()))
         return {"user": dataclass_to_api_dict(user), "token": session.token}
 
+    def create_session_for_email(self, email: str) -> dict:
+        try:
+            user = self.store.get_user_by_email(email)
+        except KeyError as exc:
+            raise ValueError("Demo user is not configured.") from exc
+        session = self.store.create_session(Session(user_id=user.user_id, token=new_session_token()))
+        return {"user": dataclass_to_api_dict(user), "token": session.token}
+
     def get_user_for_token(self, token: str) -> dict:
         session = self.store.get_session_by_token(token)
         return dataclass_to_api_dict(self.store.get_user(session.user_id))

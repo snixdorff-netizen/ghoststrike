@@ -46,6 +46,7 @@ class AlphaControlsTests(unittest.TestCase):
                 bootstrap_admin_password=None,
                 build_label="Test Build",
                 demo_account_enabled=False,
+                public_demo_access_enabled=False,
                 demo_account_email="demo@adaiq.local",
                 demo_account_password="demo12345",
             )
@@ -100,6 +101,58 @@ class AlphaControlsTests(unittest.TestCase):
         self.assertEqual(dashboard["feedback_count"], 1)
         self.assertEqual(dashboard["feedback_by_category"]["OUTPUT_QUALITY"], 1)
         self.assertTrue(dashboard["latest_activity"])
+
+    def test_public_demo_login_returns_session_for_demo_user(self) -> None:
+        original_settings = api_module.settings
+        original_orchestrator = api_module.orchestrator
+        try:
+            api_module.settings = Settings(
+                database_path=Path("/tmp/unused-alpha-test.db"),
+                seed_data_path=Path("src/ada_iq/data/demo_projects.json"),
+                auto_seed_demo=False,
+                open_registration=False,
+                bootstrap_admin_email=None,
+                bootstrap_admin_password=None,
+                build_label="Test Build",
+                demo_account_enabled=True,
+                public_demo_access_enabled=True,
+                demo_account_email="demo@adaiq.local",
+                demo_account_password="demo12345",
+            )
+            api_module.orchestrator = Orchestrator(store=InMemoryContextStore())
+            ensure_admin_user(api_module.orchestrator, "demo@adaiq.local", "demo12345")
+
+            response = api_module.demo_login()
+
+            self.assertEqual(response["user"]["email"], "demo@adaiq.local")
+            self.assertTrue(response["token"])
+        finally:
+            api_module.settings = original_settings
+            api_module.orchestrator = original_orchestrator
+
+    def test_access_summary_includes_public_demo_flag(self) -> None:
+        original_settings = api_module.settings
+        try:
+            api_module.settings = Settings(
+                database_path=Path("/tmp/unused-alpha-test.db"),
+                seed_data_path=Path("src/ada_iq/data/demo_projects.json"),
+                auto_seed_demo=False,
+                open_registration=False,
+                bootstrap_admin_email=None,
+                bootstrap_admin_password=None,
+                build_label="Test Build",
+                demo_account_enabled=True,
+                public_demo_access_enabled=True,
+                demo_account_email="demo@adaiq.local",
+                demo_account_password="demo12345",
+            )
+
+            access = api_module.get_access_summary()
+
+            self.assertTrue(access["public_demo_access_enabled"])
+            self.assertEqual(access["demo_account_email"], "demo@adaiq.local")
+        finally:
+            api_module.settings = original_settings
 
 
 if __name__ == "__main__":

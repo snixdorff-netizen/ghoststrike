@@ -220,13 +220,19 @@ function renderAuth() {
   const loggedIn = Boolean(state.user);
   const registrationOpen = state.access ? state.access.open_registration : true;
   const demoEnabled = Boolean(state.access && state.access.demo_account_enabled);
+  const publicDemoEnabled = Boolean(state.access && state.access.public_demo_access_enabled);
+  document.body.classList.toggle("logged-in", loggedIn);
   document.getElementById("auth-status").textContent = loggedIn
     ? `Logged in as ${state.user.email} (${state.user.role})`
     : "Not logged in.";
-  document.getElementById("access-copy").textContent = demoEnabled
-    ? `Use the demo account ${state.access.demo_account_email} / ${state.access.demo_account_password}, or use credentials provided by the GhostStrike team.`
-    : "Use the email and password provided by the GhostStrike team. Public signup may be disabled for alpha users.";
+  document.getElementById("access-copy").textContent = publicDemoEnabled
+    ? "Enter the shared demo workspace instantly, or use your team credentials for a private account."
+    : demoEnabled
+      ? `Use the demo account ${state.access.demo_account_email} / ${state.access.demo_account_password}, or use credentials provided by the GhostStrike team.`
+      : "Use the email and password provided by the GhostStrike team. Public signup may be disabled for alpha users.";
+  document.getElementById("demo-login-button").textContent = publicDemoEnabled ? "Enter Demo Workspace" : "Use Demo Login";
   document.getElementById("demo-login-button").classList.toggle("hidden", !demoEnabled);
+  document.getElementById("hero-demo-button").classList.toggle("hidden", !publicDemoEnabled);
   document.getElementById("logout-button").classList.toggle("hidden", !loggedIn);
   document.getElementById("create-form").classList.toggle("hidden", !loggedIn);
   document.getElementById("create-locked").classList.toggle("hidden", loggedIn);
@@ -814,9 +820,24 @@ function fillSampleBrief() {
 
 function fillDemoLogin() {
   if (!state.access || !state.access.demo_account_enabled) return;
+  if (state.access.public_demo_access_enabled) {
+    demoAccess().catch((error) => showNotice(error.message, "error"));
+    return;
+  }
   document.getElementById("login-email").value = state.access.demo_account_email;
   document.getElementById("login-password").value = state.access.demo_account_password;
   showNotice("Loaded the demo account into the login form.", "info");
+}
+
+async function demoAccess() {
+  const response = await api("/auth/demo", { method: "POST", body: JSON.stringify({}) });
+  state.token = response.token;
+  state.user = response.user;
+  window.localStorage.setItem("ada_iq_token", state.token);
+  renderAuth();
+  await Promise.all([loadProjects(), loadAdminData()]);
+  renderProjectDetail();
+  showNotice("Entered the shared demo workspace.", "success");
 }
 
 function bindEvents() {
@@ -867,6 +888,13 @@ function bindEvents() {
     }
   });
   document.getElementById("demo-login-button").addEventListener("click", fillDemoLogin);
+  document.getElementById("hero-demo-button").addEventListener("click", async () => {
+    try {
+      await demoAccess();
+    } catch (error) {
+      showNotice(error.message, "error");
+    }
+  });
   document.getElementById("project-search").addEventListener("input", (event) => {
     state.projectSearch = event.target.value;
     renderProjects();
