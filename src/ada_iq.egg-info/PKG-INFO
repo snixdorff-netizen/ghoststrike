@@ -1,0 +1,10 @@
+Metadata-Version: 2.4
+Name: ada-iq
+Version: 0.1.0
+Summary: Phase 1 MVP for the Ada IQ multi-agent orchestration platform.
+Requires-Python: >=3.11
+Requires-Dist: fastapi<1.0,>=0.115
+Requires-Dist: pydantic<3.0,>=2.8
+Requires-Dist: uvicorn<1.0,>=0.30
+Provides-Extra: dev
+Requires-Dist: pytest<9.0,>=8.3; extra == "dev"

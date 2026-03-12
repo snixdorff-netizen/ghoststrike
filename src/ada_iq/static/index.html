@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ada IQ Sprint 1.0</title>
+    <link rel="stylesheet" href="/app.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <p class="eyebrow">Sprint 1.0</p>
+        <h1>Ada IQ Conductor</h1>
+        <p class="lede">
+          Run a product-development cycle through the DFN phases, review structured agent outputs,
+          and control decision gates from one interface.
+        </p>
+      </section>
+
+      <section class="panel auth-panel">
+        <div class="panel-heading">
+          <h2>Access</h2>
+          <p>Use the demo account `demo@adaiq.local` / `demo12345`. Alpha signup can be admin-controlled.</p>
+        </div>
+        <div class="auth-grid">
+          <form id="login-form" class="stack">
+            <label>
+              <span>Email</span>
+              <input id="login-email" type="email" value="demo@adaiq.local" required />
+            </label>
+            <label>
+              <span>Password</span>
+              <input id="login-password" type="password" value="demo12345" required />
+            </label>
+            <button type="submit">Log In</button>
+          </form>
+          <form id="register-form" class="stack">
+            <label>
+              <span>Email</span>
+              <input id="register-email" type="email" required />
+            </label>
+            <label>
+              <span>Password</span>
+              <input id="register-password" type="password" minlength="8" required />
+            </label>
+            <button type="submit" class="ghost">Create Account</button>
+          </form>
+        </div>
+        <form id="accept-invitation-form" class="stack hidden invite-accept">
+          <label>
+            <span>Accept Invitation Token</span>
+            <input id="invitation-token" type="text" placeholder="Paste invitation token" />
+          </label>
+          <button type="submit" class="ghost">Accept Invitation</button>
+        </form>
+        <div class="auth-bar">
+          <p id="auth-status" class="small">Not logged in.</p>
+          <button id="logout-button" type="button" class="ghost hidden">Log Out</button>
+        </div>
+      </section>
+
+      <section class="panel create-panel">
+        <div class="panel-heading">
+          <h2>Start a Project</h2>
+          <p>Create a reviewable project record for a pilot or live opportunity.</p>
+        </div>
+        <form id="create-form" class="stack hidden">
+          <label>
+            <span>Project Name</span>
+            <input id="project-name" name="name" maxlength="120" placeholder="Cole Haan pilot" required />
+          </label>
+          <label>
+            <span>Project Brief</span>
+            <textarea
+              id="project-brief"
+              name="brief"
+              rows="5"
+              placeholder="Describe the product, target customer, constraints, and launch goal."
+              required
+            ></textarea>
+          </label>
+          <button type="submit">Create Project</button>
+        </form>
+        <div id="create-locked" class="empty-state">Log in to create and view your projects.</div>
+      </section>
+
+      <section class="grid">
+        <div class="panel list-panel">
+          <div class="panel-heading">
+            <h2>Projects</h2>
+            <p>Persistent state from the local Ada IQ context store.</p>
+          </div>
+          <div id="project-list" class="project-list"></div>
+        </div>
+
+        <div class="panel detail-panel">
+          <div class="panel-heading">
+            <h2>Project Control</h2>
+            <p>Run the current phase and manage human approvals.</p>
+          </div>
+          <div id="empty-state" class="empty-state">Select a project to inspect its workflow.</div>
+          <div id="project-detail" class="hidden">
+            <div class="status-strip">
+              <div>
+                <span class="label">Current Phase</span>
+                <strong id="detail-phase"></strong>
+              </div>
+              <div>
+                <span class="label">Status</span>
+                <strong id="detail-status"></strong>
+              </div>
+              <div>
+                <span class="label">Gate</span>
+                <strong id="detail-gate"></strong>
+              </div>
+              <div>
+                <span class="label">Owner</span>
+                <strong id="detail-owner"></strong>
+              </div>
+            </div>
+            <p id="detail-brief" class="brief"></p>
+            <div class="actions">
+              <button id="refresh-button" type="button" class="ghost">Refresh</button>
+              <button id="run-phase-button" type="button">Run Current Phase</button>
+              <button id="queue-phase-button" type="button" class="ghost">Queue Current Phase</button>
+              <button id="run-v1-button" type="button">Run V1 Package</button>
+              <button id="run-full-cycle-button" type="button">Run Full Cycle</button>
+              <button id="approve-button" type="button">Approve Gate</button>
+              <button id="reject-button" type="button" class="ghost">Reject Gate</button>
+            </div>
+            <label class="feedback-box">
+              <span>Decision Feedback</span>
+              <textarea id="decision-feedback" rows="3" placeholder="Add reviewer notes for the orchestrator."></textarea>
+            </label>
+            <section class="collab-panel">
+              <h3>Collaboration</h3>
+              <div id="collaborator-list" class="card-stack compact"></div>
+              <form id="invite-form" class="stack hidden">
+                <label>
+                  <span>Invite Email</span>
+                  <input id="invite-email" type="email" />
+                </label>
+                <label>
+                  <span>Access Role</span>
+                  <select id="invite-role">
+                    <option value="VIEWER">Viewer</option>
+                    <option value="EDITOR">Editor</option>
+                  </select>
+                </label>
+                <button type="submit" class="ghost">Create Invitation</button>
+              </form>
+              <div id="invitation-list" class="card-stack compact"></div>
+            </section>
+            <section class="collab-panel">
+              <h3>Alpha Feedback</h3>
+              <form id="feedback-form" class="stack">
+                <label>
+                  <span>Category</span>
+                  <select id="feedback-category">
+                    <option value="GENERAL">General</option>
+                    <option value="BUG">Bug</option>
+                    <option value="UX">UX</option>
+                    <option value="OUTPUT_QUALITY">Output Quality</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Feedback</span>
+                  <textarea id="feedback-summary" rows="3" placeholder="What worked, what broke, or what felt weak?" required></textarea>
+                </label>
+                <button type="submit" class="ghost">Submit Feedback</button>
+              </form>
+              <div id="feedback-list" class="card-stack compact"></div>
+            </section>
+            <div class="detail-columns">
+              <section>
+                <h3>Agent Outputs</h3>
+                <div id="outputs" class="card-stack"></div>
+              </section>
+              <section>
+                <h3>Message Log</h3>
+                <div id="messages" class="card-stack compact"></div>
+              </section>
+            </div>
+            <div class="detail-columns">
+              <section>
+                <h3>Jobs</h3>
+                <div id="jobs" class="card-stack compact"></div>
+              </section>
+              <section>
+                <h3>Events</h3>
+                <div id="events" class="card-stack compact"></div>
+              </section>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="admin-panel" class="panel meta-panel hidden">
+        <div class="panel-heading">
+          <h2>Admin Console</h2>
+          <p>Platform-wide visibility plus alpha-user provisioning.</p>
+        </div>
+        <form id="admin-create-user-form" class="stack">
+          <label>
+            <span>Alpha User Email</span>
+            <input id="admin-create-email" type="email" required />
+          </label>
+          <label>
+            <span>Temporary Password</span>
+            <input id="admin-create-password" type="password" minlength="8" required />
+          </label>
+          <label>
+            <span>Role</span>
+            <select id="admin-create-role">
+              <option value="MEMBER">Member</option>
+              <option value="ADMIN">Admin</option>
+            </select>
+          </label>
+          <button type="submit">Create Alpha User</button>
+        </form>
+        <div class="meta-grid">
+          <div>
+            <h3>Users</h3>
+            <div id="admin-users" class="card-stack compact"></div>
+          </div>
+          <div>
+            <h3>All Projects</h3>
+            <div id="admin-projects" class="card-stack compact"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel meta-panel">
+        <div class="panel-heading">
+          <h2>System Overview</h2>
+          <p>Quick reference for partners evaluating the current codebase.</p>
+        </div>
+        <div class="meta-grid">
+          <div>
+            <h3>Agent Roster</h3>
+            <div id="agent-roster" class="card-stack compact"></div>
+          </div>
+          <div>
+            <h3>Architecture</h3>
+            <div id="architecture-summary" class="card-stack compact"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
