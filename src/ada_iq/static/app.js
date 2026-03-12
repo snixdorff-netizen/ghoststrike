@@ -310,7 +310,6 @@ function renderOutputs(outputs) {
           const recommendation = (output.data.recommended_questions || [])[0] || "Review the output and decide whether to advance the project.";
           const confidence = Math.round(Number(output.confidence_score || 0) * 100);
           const sourceCount = output.sources?.length || 0;
-          const evidenceLabel = sourceCount > 0 ? `${sourceCount} source references` : "Model-generated synthesis";
           return `<article class="card output-card">
           <div class="output-header">
             <div>
@@ -327,21 +326,7 @@ function renderOutputs(outputs) {
             <p class="small">Confidence ${escapeHtml(confidence)}%</p>
             <div class="confidence-track"><div class="confidence-fill" style="width:${confidence}%"></div></div>
           </div>
-          <div class="output-detail-grid">
-            <div class="output-detail">
-              <strong>Recommended Next Move</strong>
-              <p>${escapeHtml(recommendation)}</p>
-            </div>
-            <div class="output-detail">
-              <strong>Credibility Signal</strong>
-              <p>${escapeHtml(evidenceLabel)}</p>
-            </div>
-          </div>
-          <div class="credibility-row">
-            <span class="credibility-badge">Decision Memo</span>
-            <span class="credibility-badge">${escapeHtml(output.data.agent.display_name)}</span>
-            <span class="credibility-badge">${escapeHtml(confidence)}% confidence</span>
-          </div>
+          <p class="output-next"><strong>Next:</strong> ${escapeHtml(recommendation)}</p>
         </article>`;
         })
         .join("")
