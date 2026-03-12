@@ -84,6 +84,23 @@ class AlphaControlsTests(unittest.TestCase):
         self.assertTrue(projects)
         self.assertTrue(all(project["owner_user_id"] == owner["user_id"] for project in projects))
 
+    def test_admin_dashboard_summarizes_activity(self) -> None:
+        orchestrator = Orchestrator(store=InMemoryContextStore())
+        admin = orchestrator.register_user("admin@example.com", "password123", role="ADMIN")["user"]
+        member = orchestrator.register_user("member@example.com", "password123")["user"]
+        project = orchestrator.create_project(name="Dashboard Project", brief="Track alpha health.", owner_user_id=member["user_id"])
+        orchestrator.start_current_phase(project.project_id, owner_user_id=member["user_id"])
+        orchestrator.submit_project_feedback(project.project_id, member["user_id"], "The output quality was strong.", "OUTPUT_QUALITY")
+
+        dashboard = orchestrator.get_admin_dashboard(admin["user_id"])
+
+        self.assertEqual(dashboard["user_count"], 2)
+        self.assertEqual(dashboard["project_count"], 1)
+        self.assertEqual(dashboard["active_gates"], 1)
+        self.assertEqual(dashboard["feedback_count"], 1)
+        self.assertEqual(dashboard["feedback_by_category"]["OUTPUT_QUALITY"], 1)
+        self.assertTrue(dashboard["latest_activity"])
+
 
 if __name__ == "__main__":
     unittest.main()

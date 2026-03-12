@@ -87,6 +87,65 @@ class Orchestrator:
             raise PermissionError("Admin access required.")
         return self.list_projects_snapshot()
 
+    def get_admin_dashboard(self, requester_user_id: str) -> dict:
+        requester = self.store.get_user(requester_user_id)
+        if requester.role != UserRole.ADMIN:
+            raise PermissionError("Admin access required.")
+
+        users = self.store.list_users()
+        projects = self.store.list_projects()
+        feedback_events = []
+        event_feed = []
+        queued_jobs = 0
+        completed_jobs = 0
+        active_gates = 0
+        completed_projects = 0
+
+        for project in projects:
+            if project.gate.status == GateStatus.PENDING:
+                active_gates += 1
+            if project.status == ProjectStatus.COMPLETED:
+                completed_projects += 1
+
+            project_events = self.store.list_events(project.project_id)
+            event_feed.extend(project_events)
+            feedback_events.extend([event for event in project_events if event.event_type == "alpha_feedback"])
+
+            for job in self.store.list_jobs(project.project_id):
+                if job.status.value == "QUEUED":
+                    queued_jobs += 1
+                if job.status.value == "COMPLETED":
+                    completed_jobs += 1
+
+        feedback_by_category: dict[str, int] = {}
+        for event in feedback_events:
+            category = str(event.data.get("category", "GENERAL"))
+            feedback_by_category[category] = feedback_by_category.get(category, 0) + 1
+
+        latest_activity = [
+            {
+                "project_id": event.project_id,
+                "event_type": event.event_type,
+                "message": event.message,
+                "timestamp": dataclass_to_api_dict(event.timestamp),
+                "actor": event.data.get("actor", "system"),
+            }
+            for event in sorted(event_feed, key=lambda item: item.timestamp, reverse=True)[:8]
+        ]
+
+        return {
+            "build_label": None,
+            "user_count": len(users),
+            "project_count": len(projects),
+            "active_gates": active_gates,
+            "completed_projects": completed_projects,
+            "queued_jobs": queued_jobs,
+            "completed_jobs": completed_jobs,
+            "feedback_count": len(feedback_events),
+            "feedback_by_category": feedback_by_category,
+            "latest_activity": latest_activity,
+        }
+
     def admin_create_user(self, requester_user_id: str, email: str, password: str, role: UserRole | str = UserRole.MEMBER) -> dict:
         requester = self.store.get_user(requester_user_id)
         if requester.role != UserRole.ADMIN:

@@ -8,6 +8,17 @@
   </head>
   <body>
     <main class="shell">
+      <section class="app-topbar">
+        <a href="/" class="brand-lockup">
+          <span class="brand-mark">A</span>
+          <span class="brand-text">GhostStrike</span>
+        </a>
+        <div class="topbar-meta">
+          <span class="topbar-badge">Product Workspace</span>
+          <span class="topbar-build" id="topbar-build-label">Alpha Build</span>
+        </div>
+      </section>
+
       <section class="hero">
         <div class="hero-copy">
           <p class="eyebrow" id="build-label">GhostStrike Alpha</p>
@@ -82,6 +93,7 @@
           </div>
           <div class="create-tools">
             <button id="sample-brief-button" type="button" class="ghost">Use Sample Brief</button>
+            <button id="create-sample-project-button" type="button" class="ghost">Create Sample Project</button>
           </div>
           <form id="create-form" class="stack hidden">
             <label>
@@ -110,6 +122,18 @@
             <h2>Projects</h2>
             <p>Your owned and shared projects.</p>
           </div>
+          <div class="list-toolbar">
+            <input id="project-search" type="search" placeholder="Search projects" />
+            <select id="project-filter">
+              <option value="ALL">All</option>
+              <option value="NEEDS_REVIEW">Needs Review</option>
+              <option value="ACTIVE">Active</option>
+              <option value="OWNED">Owned</option>
+              <option value="SHARED">Shared</option>
+              <option value="COMPLETED">Completed</option>
+            </select>
+          </div>
+          <div id="project-summary" class="small"></div>
           <div id="project-list" class="project-list"></div>
         </aside>
 
@@ -168,7 +192,7 @@
             <section class="workflow-panel">
               <div class="panel-heading">
                 <h3>Workflow Actions</h3>
-                <p id="action-hint">Select a project to begin.</p>
+                <div id="action-hint">Select a project to begin.</div>
               </div>
               <div class="action-groups">
                 <div class="actions primary-actions">
@@ -271,6 +295,7 @@
           <h2>Admin Console</h2>
           <p>Create alpha users and inspect activity across the platform.</p>
         </div>
+        <div id="admin-dashboard" class="admin-dashboard"></div>
         <form id="admin-create-user-form" class="stack admin-form">
           <label>
             <span>Alpha User Email</span>

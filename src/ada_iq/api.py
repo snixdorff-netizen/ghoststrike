@@ -169,6 +169,13 @@ def admin_list_projects(user: dict = Depends(admin_user)) -> list[dict]:
     return orchestrator.list_all_projects(user["user_id"])
 
 
+@app.get("/admin/dashboard")
+def admin_dashboard(user: dict = Depends(admin_user)) -> dict:
+    summary = orchestrator.get_admin_dashboard(user["user_id"])
+    summary["build_label"] = settings.build_label
+    return summary
+
+
 @app.post("/projects")
 def create_project(request: CreateProjectRequest, user: dict = Depends(current_user)) -> dict:
     project = orchestrator.create_project(owner_user_id=user["user_id"], name=request.name, brief=request.brief)

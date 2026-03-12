@@ -13,9 +13,12 @@ const state = {
   agents: [],
   architecture: null,
   access: null,
+  adminDashboard: null,
   adminUsers: [],
   adminProjects: [],
   invitations: [],
+  projectSearch: "",
+  projectFilter: "ALL",
 };
 
 const PHASES = ["EMPATHIZE", "IDEATE", "EVALUATE", "REALIZE", "MEASURE"];
@@ -73,6 +76,72 @@ function ownerLabel(project) {
   if (!project) return "";
   if (state.user && project.owner_user_id === state.user.user_id) return "You";
   return project.owner_email || project.owner_user_id;
+}
+
+function projectPriority(project) {
+  if (project.gate.status === "PENDING") return { label: "Needs Review", className: "needs-review" };
+  if (project.status === "COMPLETED") return { label: "Completed", className: "completed" };
+  return { label: "In Progress", className: "active" };
+}
+
+function renderWorkspaceEmptyState() {
+  const emptyState = document.getElementById("empty-state");
+  if (!state.user) {
+    emptyState.innerHTML = `<div class="empty-state-inner">
+      <h3>Log in to start your first GhostStrike workflow.</h3>
+      <p>Once you log in, you can create a project, accept a shared invitation, or use the sample brief to test the full product flow.</p>
+      <div class="starter-grid">
+        <article class="starter-card">
+          <strong>1. Access</strong>
+          <p>Use the credentials provided by the GhostStrike team or the demo login if it is enabled.</p>
+        </article>
+        <article class="starter-card">
+          <strong>2. Create</strong>
+          <p>Start with the sample brief if you want a fast first run instead of writing your own product brief.</p>
+        </article>
+        <article class="starter-card">
+          <strong>3. Run</strong>
+          <p>Use V1 Package for the fastest end-to-end evaluation and review the gate when it opens.</p>
+        </article>
+      </div>
+      <div class="starter-actions">
+        <button type="button" class="ghost" id="empty-demo-button">Use Demo Login</button>
+        <button type="button" class="ghost" id="empty-sample-brief-button">Load Sample Brief</button>
+      </div>
+    </div>`;
+    document.getElementById("empty-demo-button")?.classList.toggle("hidden", !(state.access && state.access.demo_account_enabled));
+    document.getElementById("empty-demo-button")?.addEventListener("click", fillDemoLogin);
+    document.getElementById("empty-sample-brief-button")?.addEventListener("click", fillSampleBrief);
+    return;
+  }
+
+  const hasProjects = state.projects.length > 0;
+  emptyState.innerHTML = `<div class="empty-state-inner">
+    <h3>${hasProjects ? "Select a project to inspect its workflow." : "Create your first project to begin."}</h3>
+    <p>${hasProjects
+      ? "Choose a project from the left to review outputs, run the next step, or make a gate decision."
+      : "Use the sample project to run a fast end-to-end test, or create a custom project from your own brief."}</p>
+    <div class="starter-grid">
+      <article class="starter-card">
+        <strong>Fastest path</strong>
+        <p>Create the sample project and run V1 Package. That gives you the strongest first-session demo in a few clicks.</p>
+      </article>
+      <article class="starter-card">
+        <strong>Shared work</strong>
+        <p>Paste an invitation token after login if someone shared a project with you.</p>
+      </article>
+      <article class="starter-card">
+        <strong>Decision points</strong>
+        <p>When a gate opens, review the outputs, add notes, then approve or reject the project direction.</p>
+      </article>
+    </div>
+    <div class="starter-actions">
+      <button type="button" id="empty-create-sample-button">Create Sample Project</button>
+      <button type="button" class="ghost" id="empty-load-sample-button">Load Sample Brief</button>
+    </div>
+  </div>`;
+  document.getElementById("empty-create-sample-button")?.addEventListener("click", createSampleProjectFromTemplate);
+  document.getElementById("empty-load-sample-button")?.addEventListener("click", fillSampleBrief);
 }
 
 function actionState(snapshot) {
@@ -168,20 +237,55 @@ function renderAuth() {
 
 function renderProjects() {
   const container = document.getElementById("project-list");
+  const summary = document.getElementById("project-summary");
   if (!state.user) {
     container.innerHTML = '<div class="empty-state compact-empty">Log in to view your projects.</div>';
+    summary.textContent = "";
     return;
   }
-  if (!state.projects.length) {
+  const filteredProjects = state.projects
+    .filter((project) => {
+      const search = state.projectSearch.trim().toLowerCase();
+      if (search && !`${project.name} ${project.brief} ${project.owner_email || ""}`.toLowerCase().includes(search)) {
+        return false;
+      }
+      switch (state.projectFilter) {
+        case "NEEDS_REVIEW":
+          return project.gate.status === "PENDING";
+        case "ACTIVE":
+          return project.status !== "COMPLETED" && project.gate.status !== "PENDING";
+        case "OWNED":
+          return project.owner_user_id === state.user.user_id;
+        case "SHARED":
+          return project.owner_user_id !== state.user.user_id;
+        case "COMPLETED":
+          return project.status === "COMPLETED";
+        default:
+          return true;
+      }
+    })
+    .sort((left, right) => {
+      const leftScore = left.gate.status === "PENDING" ? 0 : left.status === "COMPLETED" ? 2 : 1;
+      const rightScore = right.gate.status === "PENDING" ? 0 : right.status === "COMPLETED" ? 2 : 1;
+      if (leftScore !== rightScore) return leftScore - rightScore;
+      return String(right.updated_at || "").localeCompare(String(left.updated_at || ""));
+    });
+  summary.textContent = `${filteredProjects.length} of ${state.projects.length} projects shown`;
+  if (!filteredProjects.length) {
     container.innerHTML = '<div class="empty-state compact-empty">No projects yet. Create one or accept an invitation token.</div>';
     return;
   }
-  container.innerHTML = state.projects
+  container.innerHTML = filteredProjects
     .map((project) => {
       const sharedLabel = project.owner_user_id === state.user.user_id ? "Owned" : `Shared by ${escapeHtml(project.owner_email || "owner")}`;
+      const priority = projectPriority(project);
       return `<article class="project-item ${project.project_id === state.selectedProjectId ? "active" : ""}" data-project-id="${project.project_id}">
         <h3>${escapeHtml(project.name)}</h3>
-        <p class="small">${escapeHtml(project.current_phase)} · ${escapeHtml(project.status)} · ${sharedLabel}</p>
+        <div class="project-meta">
+          <span class="project-state-pill ${priority.className}">${escapeHtml(priority.label)}</span>
+          <span class="project-state-pill">${escapeHtml(project.current_phase)}</span>
+        </div>
+        <p class="small">${escapeHtml(project.status)} · ${sharedLabel}</p>
         <p>${escapeHtml(project.brief.slice(0, 140))}${project.brief.length > 140 ? "..." : ""}</p>
       </article>`;
     })
@@ -255,11 +359,22 @@ function renderCollaborators(snapshot) {
           <p><strong>${escapeHtml(invitation.invited_email)}</strong></p>
           <p class="small">${escapeHtml(invitation.access_role)} · ${escapeHtml(invitation.status)}</p>
           <p class="small">Token: ${escapeHtml(invitation.token)}</p>
+          <button type="button" class="ghost copy-token-button" data-token="${escapeHtml(invitation.token)}">Copy Token</button>
         </article>`)
         .join("")
     : '<div class="empty-state compact-empty">No invitations yet.</div>';
 
   document.getElementById("invite-form").classList.toggle("hidden", !isOwner(snapshot));
+  document.querySelectorAll(".copy-token-button").forEach((button) => {
+    button.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(button.dataset.token || "");
+        showNotice("Invitation token copied.", "success");
+      } catch (_error) {
+        showNotice("Could not copy the token automatically. Copy it manually from the card.", "error");
+      }
+    });
+  });
 }
 
 function renderFeedback(snapshot) {
@@ -359,7 +474,7 @@ function renderProjectDetail() {
 
   if (!state.user || !state.selectedSnapshot) {
     emptyState.classList.remove("hidden");
-    emptyState.textContent = state.user ? "Select a project to inspect its workflow." : "Log in to inspect workflow details.";
+    renderWorkspaceEmptyState();
     detail.classList.add("hidden");
     return;
   }
@@ -383,7 +498,7 @@ function renderProjectDetail() {
   document.getElementById("detail-phase-badge").textContent = project.current_phase;
   document.getElementById("detail-status-badge").textContent = project.status;
   document.getElementById("detail-gate-badge").textContent = `Gate ${project.gate.status}`;
-  document.getElementById("action-hint").textContent = actions.hint;
+  document.getElementById("action-hint").innerHTML = `<div class="workflow-callout"><strong>Recommended Next Move</strong><span>${escapeHtml(actions.hint)}</span></div>`;
   renderPhaseRail(project);
   renderProjectInsights(snapshot);
 
@@ -422,6 +537,27 @@ function renderMetadata() {
 
 function renderAdminPanel() {
   if (!state.user || state.user.role !== "ADMIN") return;
+  const dashboard = state.adminDashboard;
+  document.getElementById("admin-dashboard").innerHTML = dashboard
+    ? [
+        `<article class="metric-card"><span class="label">Build</span><strong>${escapeHtml(dashboard.build_label || "Unknown")}</strong></article>`,
+        `<article class="metric-card"><span class="label">Users</span><strong>${escapeHtml(dashboard.user_count)}</strong></article>`,
+        `<article class="metric-card"><span class="label">Projects</span><strong>${escapeHtml(dashboard.project_count)}</strong></article>`,
+        `<article class="metric-card"><span class="label">Active Gates</span><strong>${escapeHtml(dashboard.active_gates)}</strong></article>`,
+        `<article class="metric-card"><span class="label">Completed Projects</span><strong>${escapeHtml(dashboard.completed_projects)}</strong></article>`,
+        `<article class="metric-card"><span class="label">Queued Jobs</span><strong>${escapeHtml(dashboard.queued_jobs)}</strong></article>`,
+        `<article class="metric-card"><span class="label">Completed Jobs</span><strong>${escapeHtml(dashboard.completed_jobs)}</strong></article>`,
+        `<article class="metric-card"><span class="label">Feedback Entries</span><strong>${escapeHtml(dashboard.feedback_count)}</strong></article>`,
+        `<article class="metric-card"><span class="label">Feedback Mix</span><strong>${escapeHtml(Object.entries(dashboard.feedback_by_category || {}).map(([key, value]) => `${key}: ${value}`).join(" | ") || "None")}</strong></article>`,
+        `<section class="activity-feed"><h3>Latest Activity</h3><div class="card-stack compact">${
+          (dashboard.latest_activity || []).map((item) => `<article class="card">
+            <div class="pill">${escapeHtml(item.event_type)}</div>
+            <p>${escapeHtml(item.message)}</p>
+            <p class="small">${escapeHtml(item.actor)} · ${escapeHtml(item.timestamp)}</p>
+          </article>`).join("") || '<div class="empty-state compact-empty">No activity yet.</div>'
+        }</div></section>`,
+      ].join("")
+    : "";
   document.getElementById("admin-users").innerHTML = state.adminUsers.length
     ? state.adminUsers
         .map((user) => `<article class="card">
@@ -455,17 +591,19 @@ async function loadProjects() {
 
 async function loadAdminData() {
   if (!state.user || state.user.role !== "ADMIN") {
+    state.adminDashboard = null;
     state.adminUsers = [];
     state.adminProjects = [];
     return;
   }
-  [state.adminUsers, state.adminProjects] = await Promise.all([api("/admin/users"), api("/admin/projects")]);
+  [state.adminDashboard, state.adminUsers, state.adminProjects] = await Promise.all([api("/admin/dashboard"), api("/admin/users"), api("/admin/projects")]);
   renderAdminPanel();
 }
 
 async function loadMetadata() {
   [state.agents, state.architecture, state.access] = await Promise.all([api("/meta/agents"), api("/meta/architecture"), api("/meta/access")]);
   document.getElementById("build-label").textContent = state.access?.build_label || "GhostStrike Alpha";
+  document.getElementById("topbar-build-label").textContent = state.access?.build_label || "GhostStrike Alpha";
   document.getElementById("footer-build-label").textContent = state.access?.build_label || "GhostStrike Alpha";
   renderMetadata();
   renderAuth();
@@ -540,6 +678,24 @@ async function createProject(event) {
   renderProjects();
   renderProjectDetail();
   showNotice(`Created project ${snapshot.project.name}.`, "success");
+}
+
+async function createSampleProjectFromTemplate() {
+  if (!state.user) {
+    showNotice("Log in before creating the sample project.", "info");
+    return;
+  }
+  const snapshot = await api("/projects", {
+    method: "POST",
+    body: JSON.stringify(SAMPLE_BRIEF),
+  });
+  await Promise.all([loadProjects(), loadAdminData()]);
+  state.selectedProjectId = snapshot.project.project_id;
+  state.selectedSnapshot = snapshot;
+  await loadProjectSharing(snapshot.project.project_id);
+  renderProjects();
+  renderProjectDetail();
+  showNotice(`Created sample project ${snapshot.project.name}.`, "success");
 }
 
 async function runCurrentPhase() {
@@ -703,7 +859,22 @@ function bindEvents() {
   });
 
   document.getElementById("sample-brief-button").addEventListener("click", fillSampleBrief);
+  document.getElementById("create-sample-project-button").addEventListener("click", async () => {
+    try {
+      await createSampleProjectFromTemplate();
+    } catch (error) {
+      showNotice(error.message, "error");
+    }
+  });
   document.getElementById("demo-login-button").addEventListener("click", fillDemoLogin);
+  document.getElementById("project-search").addEventListener("input", (event) => {
+    state.projectSearch = event.target.value;
+    renderProjects();
+  });
+  document.getElementById("project-filter").addEventListener("change", (event) => {
+    state.projectFilter = event.target.value;
+    renderProjects();
+  });
 
   document.getElementById("create-form").addEventListener("submit", async (event) => {
     try {
