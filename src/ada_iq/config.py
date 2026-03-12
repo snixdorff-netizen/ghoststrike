@@ -13,6 +13,10 @@ class Settings:
     open_registration: bool
     bootstrap_admin_email: str | None
     bootstrap_admin_password: str | None
+    build_label: str
+    demo_account_enabled: bool
+    demo_account_email: str
+    demo_account_password: str
 
 
 def _bool_env(name: str, default: bool) -> bool:
@@ -30,4 +34,8 @@ def load_settings() -> Settings:
         open_registration=_bool_env("ADA_IQ_OPEN_REGISTRATION", False),
         bootstrap_admin_email=os.getenv("ADA_IQ_BOOTSTRAP_ADMIN_EMAIL"),
         bootstrap_admin_password=os.getenv("ADA_IQ_BOOTSTRAP_ADMIN_PASSWORD"),
+        build_label=os.getenv("ADA_IQ_BUILD_LABEL", "Alpha Build"),
+        demo_account_enabled=_bool_env("ADA_IQ_ENABLE_DEMO_ACCOUNT", True),
+        demo_account_email=os.getenv("ADA_IQ_DEMO_ACCOUNT_EMAIL", "demo@adaiq.local"),
+        demo_account_password=os.getenv("ADA_IQ_DEMO_ACCOUNT_PASSWORD", "demo12345"),
     )

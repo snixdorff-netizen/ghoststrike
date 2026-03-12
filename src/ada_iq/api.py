@@ -85,6 +85,8 @@ def admin_user(user: dict = Depends(current_user)) -> dict:
 def bootstrap_demo_data() -> None:
     if settings.bootstrap_admin_email and settings.bootstrap_admin_password:
         ensure_admin_user(orchestrator, settings.bootstrap_admin_email, settings.bootstrap_admin_password)
+    if settings.demo_account_enabled:
+        ensure_admin_user(orchestrator, settings.demo_account_email, settings.demo_account_password)
     if settings.auto_seed_demo:
         seed_demo_projects(
             orchestrator,
@@ -336,6 +338,10 @@ def get_access_summary() -> dict:
     return {
         "open_registration": settings.open_registration,
         "alpha_mode": not settings.open_registration,
+        "build_label": settings.build_label,
+        "demo_account_enabled": settings.demo_account_enabled,
+        "demo_account_email": settings.demo_account_email if settings.demo_account_enabled else None,
+        "demo_account_password": settings.demo_account_password if settings.demo_account_enabled else None,
     }
 
 

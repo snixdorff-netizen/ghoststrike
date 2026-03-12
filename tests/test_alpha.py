@@ -44,6 +44,10 @@ class AlphaControlsTests(unittest.TestCase):
                 open_registration=False,
                 bootstrap_admin_email=None,
                 bootstrap_admin_password=None,
+                build_label="Test Build",
+                demo_account_enabled=False,
+                demo_account_email="demo@adaiq.local",
+                demo_account_password="demo12345",
             )
             api_module.orchestrator = Orchestrator(store=InMemoryContextStore())
             with self.assertRaises(api_module.HTTPException) as context:

@@ -113,6 +113,16 @@ class Orchestrator:
         except KeyError:
             return user_id
 
+    def _project_api_dict(self, project: Project) -> dict:
+        payload = dataclass_to_api_dict(project)
+        payload["owner_email"] = self._actor_label(project.owner_user_id)
+        return payload
+
+    def _collaborator_api_dict(self, collaborator: ProjectCollaborator) -> dict:
+        payload = dataclass_to_api_dict(collaborator)
+        payload["email"] = self._actor_label(collaborator.user_id)
+        return payload
+
     def add_project_collaborator(self, project_id: str, requester_user_id: str, collaborator_email: str, access_role: ProjectAccessRole | str) -> dict:
         project = self.store.get_project(project_id)
         if project.owner_user_id != requester_user_id:
@@ -221,7 +231,7 @@ class Orchestrator:
     def get_project_snapshot(self, project_id: str, owner_user_id: str | None = None) -> dict:
         project = self._get_project_with_access(project_id, owner_user_id, require_write=False) if owner_user_id is not None else self.store.get_project(project_id)
         return {
-            "project": dataclass_to_api_dict(project),
+            "project": self._project_api_dict(project),
             "messages": dataclass_to_api_dict(self.store.list_messages(project_id)),
             "outputs": dataclass_to_api_dict(self.store.list_outputs(project_id)),
             "runs": dataclass_to_api_dict(self.store.list_runs(project_id)),
@@ -230,11 +240,11 @@ class Orchestrator:
             "feedback": self.list_project_feedback(project_id, owner_user_id) if owner_user_id is not None else [
                 dataclass_to_api_dict(event) for event in self.store.list_events(project_id) if event.event_type == "alpha_feedback"
             ],
-            "collaborators": dataclass_to_api_dict(self.store.list_collaborators(project_id)),
+            "collaborators": [self._collaborator_api_dict(collaborator) for collaborator in self.store.list_collaborators(project_id)],
         }
 
     def list_projects_snapshot(self, owner_user_id: str | None = None) -> list[dict]:
-        return [dataclass_to_api_dict(project) for project in self.store.list_projects(owner_user_id)]
+        return [self._project_api_dict(project) for project in self.store.list_projects(owner_user_id)]
 
     def export_project_snapshot(self, project_id: str, owner_user_id: str | None = None) -> dict:
         snapshot = self.get_project_snapshot(project_id, owner_user_id)

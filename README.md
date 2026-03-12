@@ -57,6 +57,7 @@ The app auto-seeds demo projects on first run when the database is empty.
 For alpha deployment, set `ADA_IQ_BOOTSTRAP_ADMIN_EMAIL` and `ADA_IQ_BOOTSTRAP_ADMIN_PASSWORD` so first boot creates your real admin account.
 Open registration is disabled by default for alpha sharing. Admins create tester accounts from the browser or API.
 If no bootstrap admin is configured and seeding is enabled, the fallback seeded admin remains `demo@adaiq.local` / `demo12345`.
+You can label each deployed build with `ADA_IQ_BUILD_LABEL` and explicitly enable the public demo account with `ADA_IQ_ENABLE_DEMO_ACCOUNT=true`.
 
 ### One-Command Demo
 
@@ -281,6 +282,8 @@ Returns the current four-phase forward development plan.
 - `ada_iq.seeds`: deterministic demo dataset loader
 - `ada_iq.api`: HTTP service, metadata endpoints, and UI delivery
 - `tests/test_alpha.py`: alpha access-control and feedback coverage
+- `docs/TEST_PRODUCT_BRIEF.md`: sample project brief for live testing
+- `docs/USER_MANUAL.md`: alpha user guide for invited testers
 - `tests/test_collaboration.py`: shared-project access coverage
 - `docs/ARCHITECTURE.md`: partner-facing system summary
 - `docs/ROADMAP.md`: next-phase development plan
