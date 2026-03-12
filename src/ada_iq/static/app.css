@@ -148,6 +148,12 @@ body.logged-in .hero-copy {
   padding: 22px 28px;
 }
 
+body.logged-in h1 {
+  max-width: 20ch;
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  line-height: 1.12;
+}
+
 body.logged-in .hero-aside {
   display: none;
 }
@@ -175,8 +181,8 @@ body.logged-in .workspace-grid {
 }
 
 .hero-copy {
-  min-height: 320px;
-  padding: 42px;
+  min-height: 260px;
+  padding: 34px 38px;
   border-radius: 18px;
   background:
     radial-gradient(ellipse 50% 60% at 80% 50%, rgba(236, 56, 71, 0.12), transparent),
@@ -208,15 +214,15 @@ body.logged-in .workspace-grid {
 
 h1 {
   margin: 0;
-  max-width: 10ch;
-  font-size: clamp(3.2rem, 6vw, 6rem);
-  line-height: 1.02;
+  max-width: 15ch;
+  font-size: clamp(2.3rem, 4vw, 4.25rem);
+  line-height: 1.06;
   font-weight: 400;
   letter-spacing: -0.04em;
 }
 
 .lede {
-  max-width: 680px;
+  max-width: 760px;
   margin: 18px 0 0;
   font-size: 1.04rem;
   line-height: 1.75;
