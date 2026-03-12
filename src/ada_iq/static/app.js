@@ -1,7 +1,7 @@
 const SAMPLE_BRIEF = {
-  name: "GhostStrike Alpha Launch Copilot",
+  name: "Ada IQ Private Preview Launch Copilot",
   brief:
-    "GhostStrike is preparing a 10-user alpha for a browser-based AI product-development platform that guides teams through a structured workflow from problem framing to concept generation, evaluation, launch planning, and measurement. The immediate goal is to validate whether early users can understand the workflow, trust the outputs, and complete a meaningful project without guided onboarding. Focus on small business founders, operators, and innovation leads. Optimize for clarity, useful summaries, visible next steps, and a first session that can be completed in 15 to 25 minutes.",
+    "Ada IQ is preparing a private preview of a browser-based AI product-development platform that guides teams through a structured workflow from problem framing to concept generation, evaluation, launch planning, and measurement. The immediate goal is to validate whether early users can understand the workflow, trust the outputs, and complete a meaningful project without guided onboarding. Focus on founders, operators, and innovation leads. Optimize for clarity, useful summaries, visible next steps, and a first session that can be completed in 15 to 25 minutes.",
 };
 
 const state = {
@@ -88,12 +88,12 @@ function renderWorkspaceEmptyState() {
   const emptyState = document.getElementById("empty-state");
   if (!state.user) {
     emptyState.innerHTML = `<div class="empty-state-inner">
-      <h3>Log in to start your first GhostStrike workflow.</h3>
-      <p>Once you log in, you can create a project, accept a shared invitation, or use the sample brief to test the full product flow.</p>
+      <h3>Enter the Ada IQ private preview.</h3>
+      <p>Once inside, you can create a project, accept a shared invitation, or use the curated sample brief to test the full product flow.</p>
       <div class="starter-grid">
         <article class="starter-card">
           <strong>1. Access</strong>
-          <p>Use the credentials provided by the GhostStrike team or the demo login if it is enabled.</p>
+          <p>Use private credentials or the preview-entry flow if it is enabled for this site.</p>
         </article>
         <article class="starter-card">
           <strong>2. Create</strong>
@@ -226,10 +226,10 @@ function renderAuth() {
     ? `Logged in as ${state.user.email} (${state.user.role})`
     : "Not logged in.";
   document.getElementById("access-copy").textContent = publicDemoEnabled
-    ? "Enter the shared demo workspace instantly, or use your team credentials for a private account."
+    ? "Enter the private preview workspace instantly, or use your team credentials for a private account."
     : demoEnabled
-      ? `Use the demo account ${state.access.demo_account_email} / ${state.access.demo_account_password}, or use credentials provided by the GhostStrike team.`
-      : "Use the email and password provided by the GhostStrike team. Public signup may be disabled for alpha users.";
+      ? `Use the preview account ${state.access.demo_account_email} / ${state.access.demo_account_password}, or use credentials provided by the Ada IQ team.`
+      : "Use the email and password provided by the Ada IQ team. Public signup may be disabled for this preview.";
   document.getElementById("demo-login-button").textContent = publicDemoEnabled ? "Enter Demo Workspace" : "Use Demo Login";
   document.getElementById("demo-login-button").classList.toggle("hidden", !demoEnabled);
   document.getElementById("hero-demo-button").classList.toggle("hidden", !publicDemoEnabled);
@@ -305,7 +305,13 @@ function renderOutputs(outputs) {
   const container = document.getElementById("outputs");
   container.innerHTML = outputs.length
     ? outputs
-        .map((output) => `<article class="card output-card">
+        .map((output) => {
+          const summary = output.data.summary || "No summary available.";
+          const recommendation = (output.data.recommended_questions || [])[0] || "Review the output and decide whether to advance the project.";
+          const confidence = Math.round(Number(output.confidence_score || 0) * 100);
+          const sourceCount = output.sources?.length || 0;
+          const evidenceLabel = sourceCount > 0 ? `${sourceCount} source references` : "Model-generated synthesis";
+          return `<article class="card output-card">
           <div class="output-header">
             <div>
               <h4>${escapeHtml(output.data.agent.display_name)}</h4>
@@ -313,16 +319,31 @@ function renderOutputs(outputs) {
             </div>
             <div class="output-meta">
               <span class="pill">v${escapeHtml(output.version)}</span>
-              <span class="pill">${escapeHtml(output.sources?.length || 0)} sources</span>
+              <span class="pill">${escapeHtml(sourceCount)} sources</span>
             </div>
           </div>
+          <p class="output-summary">${escapeHtml(summary)}</p>
           <div>
-            <p class="small">Confidence ${escapeHtml(output.confidence_score)}</p>
-            <div class="confidence-track"><div class="confidence-fill" style="width:${Math.round(Number(output.confidence_score || 0) * 100)}%"></div></div>
+            <p class="small">Confidence ${escapeHtml(confidence)}%</p>
+            <div class="confidence-track"><div class="confidence-fill" style="width:${confidence}%"></div></div>
           </div>
-          <p>${escapeHtml(output.data.summary || "No summary available.")}</p>
-          <p class="small">Recommended questions: ${escapeHtml((output.data.recommended_questions || []).join(" | ") || "None")}</p>
-        </article>`)
+          <div class="output-detail-grid">
+            <div class="output-detail">
+              <strong>Recommended Next Move</strong>
+              <p>${escapeHtml(recommendation)}</p>
+            </div>
+            <div class="output-detail">
+              <strong>Credibility Signal</strong>
+              <p>${escapeHtml(evidenceLabel)}</p>
+            </div>
+          </div>
+          <div class="credibility-row">
+            <span class="credibility-badge">Decision Memo</span>
+            <span class="credibility-badge">${escapeHtml(output.data.agent.display_name)}</span>
+            <span class="credibility-badge">${escapeHtml(confidence)}% confidence</span>
+          </div>
+        </article>`;
+        })
         .join("")
     : '<div class="empty-state compact-empty">No outputs yet. Run the current phase to produce output.</div>';
 }
@@ -608,9 +629,9 @@ async function loadAdminData() {
 
 async function loadMetadata() {
   [state.agents, state.architecture, state.access] = await Promise.all([api("/meta/agents"), api("/meta/architecture"), api("/meta/access")]);
-  document.getElementById("build-label").textContent = state.access?.build_label || "GhostStrike Alpha";
-  document.getElementById("topbar-build-label").textContent = state.access?.build_label || "GhostStrike Alpha";
-  document.getElementById("footer-build-label").textContent = state.access?.build_label || "GhostStrike Alpha";
+  document.getElementById("build-label").textContent = state.access?.build_label || "Ada IQ Private Preview";
+  document.getElementById("topbar-build-label").textContent = state.access?.build_label || "Ada IQ Private Preview";
+  document.getElementById("footer-build-label").textContent = state.access?.build_label || "Ada IQ Private Preview";
   renderMetadata();
   renderAuth();
 }
@@ -794,7 +815,7 @@ async function createAdminUser(event) {
   });
   document.getElementById("admin-create-user-form").reset();
   await loadAdminData();
-  showNotice("Alpha user created.", "success");
+  showNotice("Preview user created.", "success");
 }
 
 async function submitProjectFeedback(event) {
