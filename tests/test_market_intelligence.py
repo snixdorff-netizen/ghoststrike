@@ -30,6 +30,9 @@ class MarketIntelligenceTests(unittest.TestCase):
         self.assertIn("Cole Haan Pilot", output.data["summary"])
         self.assertGreater(output.data["tam_sam_som"]["tam_billion_usd"], 50.0)
         self.assertIn("Nike", output.data["top_competitors"])
+        self.assertTrue(output.data["citations"])
+        self.assertTrue(output.data["source_highlights"])
+        self.assertIn("recommended_next_action", output.data)
 
 
 if __name__ == "__main__":

@@ -15,6 +15,7 @@ class MarketProfile:
     competitors: tuple[str, ...]
     trends: tuple[str, ...]
     whitespace: str
+    citations: tuple[dict[str, str], ...]
 
 
 PROFILES: dict[str, MarketProfile] = {
@@ -27,6 +28,20 @@ PROFILES: dict[str, MarketProfile] = {
         competitors=("Nike", "On Running", "Allbirds", "Cole Haan"),
         trends=("hybrid comfort", "sustainable materials", "premium direct-to-consumer"),
         whitespace="Professional footwear that blends dress aesthetics with recovery-level comfort.",
+        citations=(
+            {
+                "title": "Premium footwear category scan",
+                "publisher": "Ada IQ Research Library",
+                "url": "internal://market/footwear/category-scan",
+                "note": "Benchmarks premiumization, DTC behavior, and comfort-led differentiation in footwear.",
+            },
+            {
+                "title": "Professional lifestyle segment brief",
+                "publisher": "Ada IQ Research Library",
+                "url": "internal://market/footwear/professional-segment",
+                "note": "Profiles urban professionals balancing style, comfort, and daily wear frequency.",
+            },
+        ),
     ),
     "hydration": MarketProfile(
         label="performance hydration gear",
@@ -37,6 +52,20 @@ PROFILES: dict[str, MarketProfile] = {
         competitors=("CamelBak", "Salomon", "Osprey", "Nathan Sports"),
         trends=("lightweight modularity", "cold-weather usability", "premium trail accessories"),
         whitespace="Hydration systems optimized for temperature shifts and fast refills during endurance events.",
+        citations=(
+            {
+                "title": "Endurance accessories market brief",
+                "publisher": "Ada IQ Research Library",
+                "url": "internal://market/hydration/endurance-accessories",
+                "note": "Summarizes trail, run, and endurance-hydration accessory purchasing signals.",
+            },
+            {
+                "title": "Outdoor specialty channel tracker",
+                "publisher": "Ada IQ Research Library",
+                "url": "internal://market/hydration/channel-tracker",
+                "note": "Maps product positioning across specialty outdoor and direct-to-consumer channels.",
+            },
+        ),
     ),
     "kitchen": MarketProfile(
         label="smart kitchen appliances",
@@ -47,6 +76,20 @@ PROFILES: dict[str, MarketProfile] = {
         competitors=("Ninja", "Instant", "Breville", "KitchenAid"),
         trends=("countertop consolidation", "safety-led design", "connected meal prep"),
         whitespace="Compact prep systems that reduce setup friction for time-constrained households.",
+        citations=(
+            {
+                "title": "Countertop appliance trend digest",
+                "publisher": "Ada IQ Research Library",
+                "url": "internal://market/kitchen/countertop-digest",
+                "note": "Tracks consolidation, convenience, and safety narratives in countertop appliances.",
+            },
+            {
+                "title": "Home efficiency need-state review",
+                "publisher": "Ada IQ Research Library",
+                "url": "internal://market/kitchen/efficiency-needs",
+                "note": "Synthesizes weekday meal-prep pain points and design constraints for busy households.",
+            },
+        ),
     ),
     "default": MarketProfile(
         label="adjacent consumer product market",
@@ -57,6 +100,20 @@ PROFILES: dict[str, MarketProfile] = {
         competitors=("Category incumbent A", "Category incumbent B", "Premium challenger C"),
         trends=("specialized premiumization", "channel fragmentation", "utility-led brand differentiation"),
         whitespace="A focused offer for a high-intent customer segment underserved by generic incumbents.",
+        citations=(
+            {
+                "title": "Adjacent category market overview",
+                "publisher": "Ada IQ Research Library",
+                "url": "internal://market/default/category-overview",
+                "note": "General benchmark pack for emerging consumer-product categories.",
+            },
+            {
+                "title": "Premium challenger playbook",
+                "publisher": "Ada IQ Research Library",
+                "url": "internal://market/default/challenger-playbook",
+                "note": "Examples of premium challenger brands winning on specificity and differentiated positioning.",
+            },
+        ),
     ),
 }
 
@@ -93,6 +150,16 @@ class MockMarketIntelligenceProvider(MarketIntelligenceProvider):
                     f"${tam:.1f}B TAM with strongest traction in {segment} buyers."
                 ),
                 "integration_mode": "provider_backed_mock",
+                "source_notes": [
+                    f"{citation['publisher']}: {citation['title']}"
+                    for citation in profile.citations
+                ],
+                "source_highlights": [
+                    f"{profile.label.title()} demand is being shaped by {profile.trends[0]} and {profile.trends[1]} positioning."
+                    if len(profile.trends) > 1
+                    else f"{profile.label.title()} demand is showing premiumization pressure."
+                ],
+                "citations": list(profile.citations),
                 "market_profile": profile.label,
                 "geography_focus": geography,
                 "target_segment": segment,
@@ -105,6 +172,9 @@ class MockMarketIntelligenceProvider(MarketIntelligenceProvider):
                 "top_competitors": list(profile.competitors),
                 "trend_signals": list(profile.trends),
                 "whitespace_opportunity": profile.whitespace,
+                "recommended_next_action": (
+                    f"Validate the {segment} wedge with real buyers before expanding the competitor comparison set."
+                ),
                 "recommended_questions": [
                     "Which wedge segment should the launch prioritize first?",
                     "What evidence would invalidate the current market sizing assumptions?",

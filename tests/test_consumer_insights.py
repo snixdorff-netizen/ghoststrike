@@ -30,6 +30,9 @@ class ConsumerInsightsTests(unittest.TestCase):
         self.assertEqual(output.data["primary_persona"]["occasion"], "work-to-evening transitions")
         self.assertEqual(output.data["sentiment_mix"]["positive"], 0.58)
         self.assertIn("urban professionals", output.data["insight_statements"][0].lower())
+        self.assertTrue(output.data["citations"])
+        self.assertTrue(output.data["source_highlights"])
+        self.assertIn("recommended_next_action", output.data)
 
 
 if __name__ == "__main__":

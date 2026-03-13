@@ -7,144 +7,50 @@
     <link rel="stylesheet" href="/app.css" />
   </head>
   <body>
-    <main class="shell">
-      <section class="app-topbar">
-        <a href="/" class="brand-lockup">
-          <span class="brand-mark">A</span>
-          <span class="brand-text">Ada IQ</span>
-        </a>
-        <div class="topbar-meta">
-          <span class="topbar-badge">Private Preview</span>
-          <span class="topbar-build" id="topbar-build-label">Preview Build</span>
+    <main class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-brand">
+          <a href="/" class="brand-lockup">
+            <span class="brand-mark">A</span>
+            <span class="brand-text">Ada IQ</span>
+          </a>
+          <button type="button" class="sidebar-collapse" aria-label="Collapse sidebar">‹</button>
         </div>
-      </section>
 
-      <section class="hero">
-        <div class="hero-copy">
-          <p class="eyebrow" id="build-label">Ada IQ Private Preview</p>
-          <h1>Turn product intuition into boardroom-grade product decisions.</h1>
-          <p class="lede">
-            A confidential preview of the Ada IQ platform for close partners, founders, and strategic operators evaluating how product development can become structured, signal-led, and execution-ready.
-          </p>
-          <div class="hero-proof">
-            <span>Human-in-the-loop workflow</span>
-            <span>Investor-ready decision surfaces</span>
-            <span>Structured AI operating system</span>
-          </div>
-        </div>
-        <aside class="hero-aside panel">
-          <h2>Preview Access</h2>
-          <ol class="quick-steps">
-            <li>Enter the preview workspace instantly or use your private credentials.</li>
-            <li>Open a curated sample project or create your own product brief.</li>
-            <li>Run <strong>V1 Package</strong> to see the system work end to end.</li>
-            <li>Review the outputs, gates, and strategic recommendations.</li>
-          </ol>
-          <div class="hero-actions">
-            <button id="hero-demo-button" type="button" class="hidden">Enter Demo Workspace</button>
-          </div>
-        </aside>
-      </section>
+        <nav class="sidebar-nav">
+          <button type="button" class="nav-item nav-item-active">
+            <span class="nav-icon">◫</span>
+            <span>Projects</span>
+          </button>
+        </nav>
 
-      <section class="signal-strip">
-        <div class="signal-intro">
-          <span class="signal-label">Designed for trusted early access</span>
-          <p>Shared privately with founders, operators, product leaders, and strategic partners evaluating the platform before public release.</p>
-        </div>
-        <div class="signal-logos">
-          <span>Founders</span>
-          <span>Innovation Teams</span>
-          <span>Retail & CPG</span>
-          <span>Product Strategy</span>
-          <span>Commercialization</span>
-        </div>
-      </section>
-
-      <div id="app-notice" class="notice hidden" aria-live="polite"></div>
-
-      <section class="top-grid">
-        <section class="panel auth-panel">
-          <div class="panel-heading">
-            <h2>Access</h2>
-            <p id="access-copy">Use the email and password provided by the Ada IQ team. Public signup may be disabled for this preview.</p>
-          </div>
-          <div class="create-tools">
-            <button id="demo-login-button" type="button" class="ghost hidden">Use Demo Login</button>
-          </div>
-          <div class="auth-grid">
-            <form id="login-form" class="stack">
-              <label>
-                <span>Email</span>
-                <input id="login-email" type="email" autocomplete="username" placeholder="you@company.com" required />
-              </label>
-              <label>
-                <span>Password</span>
-                <input id="login-password" type="password" autocomplete="current-password" placeholder="Enter your password" required />
-              </label>
-              <button type="submit">Log In</button>
-            </form>
-            <form id="register-form" class="stack">
-              <label>
-                <span>Email</span>
-                <input id="register-email" type="email" placeholder="Create a new user" required />
-              </label>
-              <label>
-                <span>Password</span>
-                <input id="register-password" type="password" minlength="8" placeholder="At least 8 characters" required />
-              </label>
-              <button type="submit" class="ghost">Create Account</button>
-            </form>
-          </div>
-          <form id="accept-invitation-form" class="stack hidden invite-accept">
-            <label>
-              <span>Accept Invitation Token</span>
-              <input id="invitation-token" type="text" placeholder="Paste project invitation token" />
-            </label>
-            <button type="submit" class="ghost">Accept Invitation</button>
-          </form>
-          <div class="auth-bar">
-            <p id="auth-status" class="small">Not logged in.</p>
-            <button id="logout-button" type="button" class="ghost hidden">Log Out</button>
+        <section class="sidebar-section">
+          <p class="sidebar-label">Insights</p>
+          <div class="sidebar-links">
+            <div class="sidebar-link">Product Performance</div>
+            <div class="sidebar-link">Team Performance</div>
+            <div class="sidebar-link">Leadership Dashboard</div>
+            <div class="sidebar-link">Compare Products</div>
+            <div class="sidebar-link">Consumer Insights</div>
+            <div class="sidebar-link">Whitespace Research</div>
           </div>
         </section>
 
-        <section class="panel create-panel">
-          <div class="panel-heading">
-            <h2>Start a Project</h2>
-            <p>Create a project from a product brief. If you want a quick guided test, load the sample alpha brief first.</p>
+        <section class="sidebar-section">
+          <p class="sidebar-label">Workspace</p>
+          <div class="sidebar-links">
+            <div class="sidebar-link">Concept Generation</div>
+            <div class="sidebar-link">Evaluation</div>
+            <div class="sidebar-link">Launch Planning</div>
           </div>
-          <div class="create-tools">
-            <button id="sample-brief-button" type="button" class="ghost">Use Sample Brief</button>
-            <button id="create-sample-project-button" type="button" class="ghost">Create Sample Project</button>
-          </div>
-          <form id="create-form" class="stack hidden">
-            <label>
-              <span>Project Name</span>
-                <input id="project-name" name="name" maxlength="120" placeholder="Ada IQ Private Preview Launch Copilot" required />
-            </label>
-            <label>
-              <span>Project Brief</span>
-              <textarea
-                id="project-brief"
-                name="brief"
-                rows="7"
-                placeholder="Describe the product, target customer, constraints, and launch goal."
-                required
-              ></textarea>
-            </label>
-            <button type="submit">Create Project</button>
-          </form>
-          <div id="create-locked" class="empty-state compact-empty">Log in to create and view your projects.</div>
         </section>
-      </section>
 
-      <section class="workspace-grid">
-        <aside class="panel list-panel">
-          <div class="panel-heading">
+        <section class="sidebar-projects">
+          <div class="sidebar-projects-header">
             <h2>Projects</h2>
-            <p>Your owned and shared projects.</p>
+            <p id="project-summary" class="small"></p>
           </div>
-          <div class="list-toolbar">
+          <div class="list-toolbar sidebar-toolbar">
             <input id="project-search" type="search" placeholder="Search projects" />
             <select id="project-filter">
               <option value="ALL">All</option>
@@ -155,226 +61,358 @@
               <option value="COMPLETED">Completed</option>
             </select>
           </div>
-          <div id="project-summary" class="small"></div>
           <div id="project-list" class="project-list"></div>
-        </aside>
+        </section>
 
-        <section class="panel detail-panel">
-          <div id="empty-state" class="empty-state">Select a project to inspect its workflow.</div>
-          <div id="project-detail" class="hidden">
-            <div class="panel-heading project-heading">
-              <div>
-                <h2 id="detail-name">Project Workspace</h2>
-                <p id="detail-subtitle">Review outputs, control the workflow, and capture feedback.</p>
-              </div>
-              <div class="project-badges">
-                <span class="badge" id="detail-phase-badge"></span>
-                <span class="badge" id="detail-status-badge"></span>
-                <span class="badge" id="detail-gate-badge"></span>
+        <div class="sidebar-footer">
+          <span id="footer-build-label">Build</span>
+          <span>Ada IQ private preview</span>
+        </div>
+      </aside>
+
+      <section class="main-shell">
+        <header class="topbar">
+          <div class="topbar-title-group">
+            <p class="topbar-page-label">Projects</p>
+            <div class="topbar-search">
+              <span class="search-icon">⌕</span>
+              <input id="global-search" type="search" placeholder="Search projects, insights, or ask Ada..." />
+            </div>
+          </div>
+          <div class="topbar-actions">
+            <button id="demo-login-button" type="button" class="cta-button hidden">Ask Ada</button>
+            <button id="logout-button" type="button" class="icon-button ghost hidden">Log Out</button>
+            <div class="user-chip">
+              <span id="topbar-build-label" class="small">Preview Build</span>
+            </div>
+          </div>
+        </header>
+
+        <div id="app-notice" class="notice hidden" aria-live="polite"></div>
+
+        <section class="guest-stage">
+          <section class="guest-hero">
+            <div class="guest-copy">
+              <p class="eyebrow" id="build-label">Ada IQ Private Preview</p>
+              <h1>Turn product intuition into boardroom-grade product decisions.</h1>
+              <p class="lede">
+                A confidential preview of the Ada IQ platform for close partners, founders, and strategic operators evaluating how product development can become structured, signal-led, and execution-ready.
+              </p>
+              <div class="hero-proof">
+                <span>Human-in-the-loop workflow</span>
+                <span>Investor-ready decision surfaces</span>
+                <span>Structured AI operating system</span>
               </div>
             </div>
-
-            <section class="detail-overview">
-              <div class="stage-main">
-                <div class="status-strip">
-                  <div>
-                    <span class="label">Current Phase</span>
-                    <strong id="detail-phase"></strong>
-                  </div>
-                  <div>
-                    <span class="label">Status</span>
-                    <strong id="detail-status"></strong>
-                  </div>
-                  <div>
-                    <span class="label">Gate</span>
-                    <strong id="detail-gate"></strong>
-                  </div>
-                  <div>
-                    <span class="label">Owner</span>
-                    <strong id="detail-owner"></strong>
-                  </div>
-                </div>
-
-                <section class="phase-panel">
-                  <div class="panel-heading">
-                    <h3>Workflow Progress</h3>
-                    <p>Track where the project is now and what comes next.</p>
-                  </div>
-                  <div id="phase-rail" class="phase-rail"></div>
-                </section>
-
-                <section class="insight-panel">
-                  <div class="panel-heading">
-                    <h3>Project Snapshot</h3>
-                    <p>A quick read on project momentum, ownership, and next action.</p>
-                  </div>
-                  <div id="project-insights" class="insight-grid"></div>
-                </section>
-
-                <p id="detail-brief" class="brief"></p>
+            <aside class="guest-access card">
+              <h2>Preview Access</h2>
+              <p id="access-copy">Use the email and password provided by the Ada IQ team. Public signup may be disabled for this preview.</p>
+              <div class="hero-actions">
+                <button id="hero-demo-button" type="button" class="hidden">Enter Demo Workspace</button>
               </div>
-
-              <aside class="stage-side">
-                <section class="workflow-panel">
-                  <div class="panel-heading">
-                    <h3>Workflow Actions</h3>
-                    <div id="action-hint">Select a project to begin.</div>
-                  </div>
-                  <div class="action-groups">
-                    <div class="actions primary-actions">
-                      <button id="run-phase-button" type="button">Run Current Phase</button>
-                      <button id="run-v1-button" type="button">Run V1 Package</button>
-                      <button id="approve-button" type="button">Approve Gate</button>
-                    </div>
-                    <div class="actions secondary-actions">
-                      <button id="refresh-button" type="button" class="ghost">Refresh</button>
-                      <button id="queue-phase-button" type="button" class="ghost">Queue Current Phase</button>
-                      <button id="run-full-cycle-button" type="button">Run Full Cycle</button>
-                      <button id="reject-button" type="button" class="ghost">Reject Gate</button>
-                    </div>
-                  </div>
-                  <label class="feedback-box">
-                    <span>Decision Feedback</span>
-                    <textarea id="decision-feedback" rows="3" placeholder="Add reviewer notes when approving or rejecting a gate."></textarea>
+              <div class="auth-grid">
+                <form id="login-form" class="stack">
+                  <label>
+                    <span>Email</span>
+                    <input id="login-email" type="email" autocomplete="username" placeholder="you@company.com" required />
                   </label>
-                </section>
-              </aside>
-            </section>
+                  <label>
+                    <span>Password</span>
+                    <input id="login-password" type="password" autocomplete="current-password" placeholder="Enter your password" required />
+                  </label>
+                  <button type="submit">Log In</button>
+                </form>
+                <form id="register-form" class="stack">
+                  <label>
+                    <span>Email</span>
+                    <input id="register-email" type="email" placeholder="Create a new user" required />
+                  </label>
+                  <label>
+                    <span>Password</span>
+                    <input id="register-password" type="password" minlength="8" placeholder="At least 8 characters" required />
+                  </label>
+                  <button type="submit" class="ghost">Create Account</button>
+                </form>
+              </div>
+              <form id="accept-invitation-form" class="stack hidden invite-accept">
+                <label>
+                  <span>Accept Invitation Token</span>
+                  <input id="invitation-token" type="text" placeholder="Paste project invitation token" />
+                </label>
+                <button type="submit" class="ghost">Accept Invitation</button>
+              </form>
+              <div class="auth-bar">
+                <p id="auth-status" class="small">Not logged in.</p>
+              </div>
+            </aside>
+          </section>
 
-            <div class="content-grid">
-              <section class="content-main">
-                <section class="output-stage">
-                  <h3>Agent Outputs</h3>
-                  <p class="section-copy">Decision-oriented summaries from the current workflow state.</p>
-                  <div id="outputs" class="card-stack"></div>
-                </section>
-                <section class="support-stage">
-                  <h3>Message Log</h3>
-                  <p class="section-copy">Runs, messages, and handoffs across the workflow.</p>
-                  <div id="messages" class="card-stack compact"></div>
-                </section>
+          <section class="signal-strip">
+            <div class="signal-intro">
+              <span class="signal-label">Designed for trusted early access</span>
+              <p>Shared privately with founders, operators, product leaders, and strategic partners evaluating the platform before public release.</p>
+            </div>
+            <div class="signal-logos">
+              <span>Founders</span>
+              <span>Innovation Teams</span>
+              <span>Retail & CPG</span>
+              <span>Product Strategy</span>
+              <span>Commercialization</span>
+            </div>
+          </section>
+        </section>
+
+        <section class="dashboard-shell">
+          <div class="dashboard-head">
+            <div>
+              <h1 id="dashboard-title" class="dashboard-title">Ada IQ Projects Dashboard</h1>
+              <p id="dashboard-subtitle" class="dashboard-subtitle">AI-prioritized by urgency and pending actions.</p>
+            </div>
+            <div class="dashboard-head-actions">
+              <button id="create-sample-project-button" type="button" class="ghost">Create Sample Project</button>
+              <button id="sample-brief-button" type="button" class="ghost">Use Sample Brief</button>
+            </div>
+          </div>
+
+          <div id="dashboard-stats" class="stats-grid"></div>
+
+          <section class="dashboard-canvas">
+            <div class="primary-canvas">
+              <section class="card create-card">
+                <div class="card-heading">
+                  <h2>Start New Project</h2>
+                  <p>Create a project from a product brief or launch the curated sample.</p>
+                </div>
+                <form id="create-form" class="stack hidden">
+                  <label>
+                    <span>Project Name</span>
+                    <input id="project-name" name="name" maxlength="120" placeholder="Ada IQ Private Preview Launch Copilot" required />
+                  </label>
+                  <label>
+                    <span>Project Brief</span>
+                    <textarea id="project-brief" name="brief" rows="6" placeholder="Describe the product, target customer, constraints, and launch goal." required></textarea>
+                  </label>
+                  <button type="submit">Create Project</button>
+                </form>
+                <div id="create-locked" class="empty-state compact-empty">Log in to create and view your projects.</div>
               </section>
 
-              <aside class="content-side">
-                <section class="collab-panel">
-                  <h3>Collaboration</h3>
-                  <p class="section-copy">Manage ownership, shared access, and invitation tokens.</p>
-                  <div id="collaborator-list" class="card-stack compact"></div>
-                  <form id="invite-form" class="stack hidden">
-                    <label>
-                      <span>Invite Email</span>
-                      <input id="invite-email" type="email" />
-                    </label>
-                    <label>
-                      <span>Access Role</span>
-                      <select id="invite-role">
-                        <option value="VIEWER">Viewer</option>
-                        <option value="EDITOR">Editor</option>
-                      </select>
-                    </label>
-                    <button type="submit" class="ghost">Create Invitation</button>
-                  </form>
-                  <div id="invitation-list" class="card-stack compact"></div>
-                </section>
-
-                <section class="collab-panel">
-                  <h3>Preview Notes</h3>
-                  <p class="section-copy">Capture what felt strong, what felt weak, and what deserves a deeper product conversation.</p>
-                  <form id="feedback-form" class="stack">
-                    <label>
-                      <span>Category</span>
-                      <select id="feedback-category">
-                        <option value="GENERAL">General</option>
-                        <option value="BUG">Bug</option>
-                        <option value="UX">UX</option>
-                        <option value="OUTPUT_QUALITY">Output Quality</option>
-                      </select>
-                    </label>
-                    <label>
-                      <span>Feedback</span>
-                      <textarea id="feedback-summary" rows="3" placeholder="What worked, what broke, or what felt weak?" required></textarea>
-                    </label>
-                    <button type="submit" class="ghost">Submit Feedback</button>
-                  </form>
-                  <div id="feedback-list" class="card-stack compact"></div>
-                </section>
-
-                <details class="ops-panel">
-                  <summary>Operational Detail</summary>
-                  <div class="ops-grid">
-                    <section>
-                      <h3>Jobs</h3>
-                      <div id="jobs" class="card-stack compact"></div>
-                    </section>
-                    <section>
-                      <h3>Events</h3>
-                      <div id="events" class="card-stack compact"></div>
-                    </section>
+              <section class="card detail-panel">
+                <div id="empty-state" class="empty-state">Select a project to inspect its workflow.</div>
+                <div id="project-detail" class="hidden">
+                  <div class="card-heading project-heading">
+                    <div>
+                      <h2 id="detail-name">Project Workspace</h2>
+                      <p id="detail-subtitle">Review outputs, control the workflow, and capture feedback.</p>
+                    </div>
+                    <div class="project-badges">
+                      <span class="badge" id="detail-phase-badge"></span>
+                      <span class="badge" id="detail-status-badge"></span>
+                      <span class="badge" id="detail-gate-badge"></span>
+                    </div>
                   </div>
-                </details>
-              </aside>
+
+                  <section class="detail-overview">
+                    <div class="stage-main">
+                      <div class="status-strip">
+                        <div>
+                          <span class="label">Current Phase</span>
+                          <strong id="detail-phase"></strong>
+                        </div>
+                        <div>
+                          <span class="label">Status</span>
+                          <strong id="detail-status"></strong>
+                        </div>
+                        <div>
+                          <span class="label">Gate</span>
+                          <strong id="detail-gate"></strong>
+                        </div>
+                        <div>
+                          <span class="label">Owner</span>
+                          <strong id="detail-owner"></strong>
+                        </div>
+                      </div>
+
+                      <section class="phase-panel card-subsection">
+                        <div class="card-heading">
+                          <h3>Workflow Progress</h3>
+                          <p>Track where the project is now and what comes next.</p>
+                        </div>
+                        <div id="phase-rail" class="phase-rail"></div>
+                      </section>
+
+                      <section class="insight-panel card-subsection">
+                        <div class="card-heading">
+                          <h3>Project Snapshot</h3>
+                          <p>A quick read on project momentum, ownership, and next action.</p>
+                        </div>
+                        <div id="project-insights" class="insight-grid"></div>
+                      </section>
+
+                      <p id="detail-brief" class="brief"></p>
+                    </div>
+
+                    <aside class="stage-side">
+                      <section class="workflow-panel">
+                        <div class="card-heading">
+                          <h3>Workflow Actions</h3>
+                          <div id="action-hint">Select a project to begin.</div>
+                        </div>
+                        <div class="action-groups">
+                          <div class="actions primary-actions">
+                            <button id="run-phase-button" type="button">Run Current Phase</button>
+                            <button id="run-v1-button" type="button">Run V1 Package</button>
+                            <button id="approve-button" type="button">Approve Gate</button>
+                          </div>
+                          <div class="actions secondary-actions">
+                            <button id="refresh-button" type="button" class="ghost">Refresh</button>
+                            <button id="queue-phase-button" type="button" class="ghost">Queue Current Phase</button>
+                            <button id="run-full-cycle-button" type="button">Run Full Cycle</button>
+                            <button id="reject-button" type="button" class="ghost">Reject Gate</button>
+                          </div>
+                        </div>
+                        <label class="feedback-box">
+                          <span>Decision Feedback</span>
+                          <textarea id="decision-feedback" rows="3" placeholder="Add reviewer notes when approving or rejecting a gate."></textarea>
+                        </label>
+                      </section>
+                    </aside>
+                  </section>
+
+                  <div class="content-grid">
+                    <section class="content-main">
+                      <section class="output-stage">
+                        <h3>Agent Outputs</h3>
+                        <p class="section-copy">Decision-oriented summaries from the current workflow state.</p>
+                        <div id="outputs" class="card-stack"></div>
+                      </section>
+                      <section class="support-stage">
+                        <h3>Message Log</h3>
+                        <p class="section-copy">Runs, messages, and handoffs across the workflow.</p>
+                        <div id="messages" class="card-stack compact"></div>
+                      </section>
+                    </section>
+
+                    <aside class="content-side">
+                      <section class="card side-card">
+                        <h3>Collaboration</h3>
+                        <p class="section-copy">Manage ownership, shared access, and invitation tokens.</p>
+                        <div id="collaborator-list" class="card-stack compact"></div>
+                        <form id="invite-form" class="stack hidden">
+                          <label>
+                            <span>Invite Email</span>
+                            <input id="invite-email" type="email" />
+                          </label>
+                          <label>
+                            <span>Access Role</span>
+                            <select id="invite-role">
+                              <option value="VIEWER">Viewer</option>
+                              <option value="EDITOR">Editor</option>
+                            </select>
+                          </label>
+                          <button type="submit" class="ghost">Create Invitation</button>
+                        </form>
+                        <div id="invitation-list" class="card-stack compact"></div>
+                      </section>
+
+                      <section class="card side-card">
+                        <h3>Preview Notes</h3>
+                        <p class="section-copy">Capture what felt strong, what felt weak, and what deserves a deeper product conversation.</p>
+                        <form id="feedback-form" class="stack">
+                          <label>
+                            <span>Category</span>
+                            <select id="feedback-category">
+                              <option value="GENERAL">General</option>
+                              <option value="BUG">Bug</option>
+                              <option value="UX">UX</option>
+                              <option value="OUTPUT_QUALITY">Output Quality</option>
+                            </select>
+                          </label>
+                          <label>
+                            <span>Feedback</span>
+                            <textarea id="feedback-summary" rows="3" placeholder="What worked, what broke, or what felt weak?" required></textarea>
+                          </label>
+                          <button type="submit" class="ghost">Submit Feedback</button>
+                        </form>
+                        <div id="feedback-list" class="card-stack compact"></div>
+                      </section>
+
+                      <details class="card ops-panel">
+                        <summary>Operational Detail</summary>
+                        <div class="ops-grid">
+                          <section>
+                            <h3>Jobs</h3>
+                            <div id="jobs" class="card-stack compact"></div>
+                          </section>
+                          <section>
+                            <h3>Events</h3>
+                            <div id="events" class="card-stack compact"></div>
+                          </section>
+                        </div>
+                      </details>
+                    </aside>
+                  </div>
+                </div>
+              </section>
             </div>
-          </div>
+
+            <aside class="secondary-canvas">
+              <section id="admin-panel" class="card hidden">
+                <div class="card-heading">
+                  <h2>Preview Console</h2>
+                  <p>Create preview users and inspect activity across the platform.</p>
+                </div>
+                <div id="admin-dashboard" class="admin-dashboard"></div>
+                <form id="admin-create-user-form" class="stack admin-form">
+                  <label>
+                    <span>Preview User Email</span>
+                    <input id="admin-create-email" type="email" required />
+                  </label>
+                  <label>
+                    <span>Temporary Password</span>
+                    <input id="admin-create-password" type="password" minlength="8" required />
+                  </label>
+                  <label>
+                    <span>Role</span>
+                    <select id="admin-create-role">
+                      <option value="MEMBER">Member</option>
+                      <option value="ADMIN">Admin</option>
+                    </select>
+                  </label>
+                  <button type="submit">Create Preview User</button>
+                </form>
+                <div class="meta-grid">
+                  <div>
+                    <h3>Users</h3>
+                    <div id="admin-users" class="card-stack compact"></div>
+                  </div>
+                  <div>
+                    <h3>All Projects</h3>
+                    <div id="admin-projects" class="card-stack compact"></div>
+                  </div>
+                </div>
+              </section>
+
+              <details class="card system-panel">
+                <summary>System Overview</summary>
+                <div class="card-heading">
+                  <p>Reference material for technical partners and internal reviewers.</p>
+                </div>
+                <div class="meta-grid">
+                  <div>
+                    <h3>Agent Roster</h3>
+                    <div id="agent-roster" class="card-stack compact"></div>
+                  </div>
+                  <div>
+                    <h3>Architecture</h3>
+                    <div id="architecture-summary" class="card-stack compact"></div>
+                  </div>
+                </div>
+              </details>
+            </aside>
+          </section>
         </section>
       </section>
-
-      <section id="admin-panel" class="panel meta-panel hidden">
-        <div class="panel-heading">
-          <h2>Preview Console</h2>
-          <p>Create preview users and inspect activity across the platform.</p>
-        </div>
-        <div id="admin-dashboard" class="admin-dashboard"></div>
-        <form id="admin-create-user-form" class="stack admin-form">
-          <label>
-            <span>Preview User Email</span>
-            <input id="admin-create-email" type="email" required />
-          </label>
-          <label>
-            <span>Temporary Password</span>
-            <input id="admin-create-password" type="password" minlength="8" required />
-          </label>
-          <label>
-            <span>Role</span>
-            <select id="admin-create-role">
-              <option value="MEMBER">Member</option>
-              <option value="ADMIN">Admin</option>
-            </select>
-          </label>
-          <button type="submit">Create Preview User</button>
-        </form>
-        <div class="meta-grid">
-          <div>
-            <h3>Users</h3>
-            <div id="admin-users" class="card-stack compact"></div>
-          </div>
-          <div>
-            <h3>All Projects</h3>
-            <div id="admin-projects" class="card-stack compact"></div>
-          </div>
-        </div>
-      </section>
-
-      <details class="panel meta-panel system-panel">
-        <summary>System Overview</summary>
-        <div class="panel-heading">
-          <p>Reference material for technical partners and internal reviewers.</p>
-        </div>
-        <div class="meta-grid">
-          <div>
-            <h3>Agent Roster</h3>
-            <div id="agent-roster" class="card-stack compact"></div>
-          </div>
-          <div>
-            <h3>Architecture</h3>
-            <div id="architecture-summary" class="card-stack compact"></div>
-          </div>
-        </div>
-      </details>
-
-      <footer class="footer-bar">
-        <span id="footer-build-label">Build</span>
-        <span>Ada IQ private preview workspace</span>
-      </footer>
     </main>
 
     <script src="/app.js"></script>

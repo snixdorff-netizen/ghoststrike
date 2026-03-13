@@ -32,6 +32,28 @@ class MockConsumerInsightsProvider(ConsumerInsightsProvider):
                     f"who need {need_state} in {occasion} moments."
                 ),
                 "integration_mode": "provider_backed_mock",
+                "source_notes": [
+                    "Ada IQ Research Library: voice-of-customer synthesis pack",
+                    "Ada IQ Research Library: need-state and use-occasion heuristics",
+                ],
+                "source_highlights": [
+                    f"{segment} repeatedly describe friction during {occasion} moments when products force visible compromise.",
+                    "Purchase confidence and fit with identity remain secondary but highly persistent emotional drivers.",
+                ],
+                "citations": [
+                    {
+                        "title": "Voice-of-customer synthesis pack",
+                        "publisher": "Ada IQ Research Library",
+                        "url": "internal://consumer/voc/synthesis-pack",
+                        "note": "Curated synthesis of interview themes, review language, and observed consumer tradeoffs.",
+                    },
+                    {
+                        "title": "Need-state heuristic library",
+                        "publisher": "Ada IQ Research Library",
+                        "url": "internal://consumer/needs/heuristic-library",
+                        "note": "Structured need-state patterns built from prior category discovery work.",
+                    },
+                ],
                 "primary_persona": {
                     "name": self._persona_name(segment),
                     "segment": segment,
@@ -48,6 +70,9 @@ class MockConsumerInsightsProvider(ConsumerInsightsProvider):
                     f"{segment} need {need_state} because their daily routine punishes friction, but current options force visible compromise.",
                     f"{segment} want products that signal competence and good taste, but they distrust feature-heavy positioning without proof.",
                 ],
+                "recommended_next_action": (
+                    f"Run live interviews with {segment} to confirm whether {occasion} is the dominant conversion moment."
+                ),
                 "recommended_questions": [
                     "Which persona assumptions need live interview validation first?",
                     "What evidence would show this need hierarchy is wrong?",

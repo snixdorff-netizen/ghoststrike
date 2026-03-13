@@ -301,15 +301,59 @@ function renderProjects() {
   });
 }
 
+function renderDashboardStats() {
+  const container = document.getElementById("dashboard-stats");
+  const title = document.getElementById("dashboard-title");
+  const subtitle = document.getElementById("dashboard-subtitle");
+
+  if (!state.user) {
+    title.textContent = "Ada IQ Private Preview";
+    subtitle.textContent = "Enter the workspace to explore projects, outputs, and AI-guided product decisions.";
+    container.innerHTML = "";
+    return;
+  }
+
+  const projects = state.projects || [];
+  const activeProjects = projects.filter((project) => project.status !== "COMPLETED").length;
+  const pendingReview = projects.filter((project) => project.gate.status === "PENDING").length;
+  const completedProjects = projects.filter((project) => project.status === "COMPLETED").length;
+  const sharedProjects = projects.filter((project) => project.owner_user_id !== state.user.user_id).length;
+
+  if (state.selectedSnapshot) {
+    title.textContent = state.selectedSnapshot.project.name;
+    subtitle.textContent = "AI-prioritized by urgency, workflow state, and pending decisions.";
+  } else {
+    title.textContent = "Ada IQ Projects Dashboard";
+    subtitle.textContent = "AI-prioritized by urgency and pending actions.";
+  }
+
+  const cards = [
+    { label: "Active Projects", value: String(activeProjects), note: `${projects.length} total in workspace` },
+    { label: "Needs Review", value: String(pendingReview), note: "Projects waiting on a gate decision" },
+    { label: "Completed", value: String(completedProjects), note: "Projects that reached the end of the workflow" },
+    { label: "Shared With You", value: String(sharedProjects), note: "Cross-functional collaboration in progress" },
+  ];
+
+  container.innerHTML = cards.map((card) => `<article class="stats-card">
+      <span class="label">${escapeHtml(card.label)}</span>
+      <strong>${escapeHtml(card.value)}</strong>
+      <p>${escapeHtml(card.note)}</p>
+    </article>`).join("");
+}
+
 function renderOutputs(outputs) {
   const container = document.getElementById("outputs");
   container.innerHTML = outputs.length
     ? outputs
         .map((output) => {
           const summary = output.data.summary || "No summary available.";
-          const recommendation = (output.data.recommended_questions || [])[0] || "Review the output and decide whether to advance the project.";
+          const recommendation = output.data.recommended_next_action
+            || (output.data.recommended_questions || [])[0]
+            || "Review the output and decide whether to advance the project.";
           const confidence = Math.round(Number(output.confidence_score || 0) * 100);
           const sourceCount = output.sources?.length || 0;
+          const highlights = output.data.source_highlights || [];
+          const citations = output.data.citations || [];
           return `<article class="card output-card">
           <div class="output-header">
             <div>
@@ -326,7 +370,14 @@ function renderOutputs(outputs) {
             <p class="small">Confidence ${escapeHtml(confidence)}%</p>
             <div class="confidence-track"><div class="confidence-fill" style="width:${confidence}%"></div></div>
           </div>
+          ${highlights.length ? `<p class="small"><strong>Evidence:</strong> ${escapeHtml(highlights.join(" | "))}</p>` : ""}
           <p class="output-next"><strong>Next:</strong> ${escapeHtml(recommendation)}</p>
+          ${citations.length ? `<div class="source-list">${citations.map((citation) => `<article class="source-item">
+              <strong>${escapeHtml(citation.title || "Source")}</strong>
+              <p class="small">${escapeHtml(citation.publisher || "Research source")}</p>
+              <p>${escapeHtml(citation.note || "")}</p>
+              ${citation.url ? `<p class="small"><a href="${escapeHtml(citation.url)}" target="_blank" rel="noreferrer">View source</a></p>` : ""}
+            </article>`).join("")}</div>` : ""}
         </article>`;
         })
         .join("")
@@ -488,6 +539,7 @@ function renderProjectDetail() {
     emptyState.classList.remove("hidden");
     renderWorkspaceEmptyState();
     detail.classList.add("hidden");
+    renderDashboardStats();
     return;
   }
 
@@ -527,6 +579,7 @@ function renderProjectDetail() {
   renderCollaborators(snapshot);
   renderFeedback(snapshot);
   renderOperations(snapshot);
+  renderDashboardStats();
 }
 
 function renderMetadata() {
@@ -595,10 +648,12 @@ async function loadProjects() {
     state.selectedSnapshot = null;
     renderProjects();
     renderProjectDetail();
+    renderDashboardStats();
     return;
   }
   state.projects = await api("/projects");
   renderProjects();
+  renderDashboardStats();
 }
 
 async function loadAdminData() {
@@ -619,6 +674,7 @@ async function loadMetadata() {
   document.getElementById("footer-build-label").textContent = state.access?.build_label || "Ada IQ Private Preview";
   renderMetadata();
   renderAuth();
+  renderDashboardStats();
 }
 
 async function loadCurrentUser() {
@@ -879,10 +935,11 @@ function bindEvents() {
     state.invitations = [];
     window.localStorage.removeItem("ada_iq_token");
     renderAuth();
-    renderProjects();
-    renderProjectDetail();
-    renderAdminPanel();
-    showNotice("Logged out.", "info");
+  renderProjects();
+  renderProjectDetail();
+  renderAdminPanel();
+  renderDashboardStats();
+  showNotice("Logged out.", "info");
   });
 
   document.getElementById("sample-brief-button").addEventListener("click", fillSampleBrief);
@@ -1013,6 +1070,7 @@ async function boot() {
   await Promise.all([loadMetadata(), loadCurrentUser()]);
   await Promise.all([loadProjects(), loadAdminData()]);
   renderProjectDetail();
+  renderDashboardStats();
 }
 
 boot().catch((error) => showNotice(error.message, "error"));
