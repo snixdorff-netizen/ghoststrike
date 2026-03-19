@@ -11,6 +11,8 @@ from typing import Any
 
 from ada_iq.models import (
     AgentOutput,
+    ComplianceProfile,
+    ComplianceStatus,
     DecisionGate,
     DFNPhase,
     EventLog,
@@ -27,6 +29,9 @@ from ada_iq.models import (
     ProjectStatus,
     RunStatus,
     Session,
+    SmartBriefModule,
+    SmartBriefRevision,
+    SmartProductBrief,
     User,
     UserRole,
     InvitationStatus,
@@ -47,6 +52,9 @@ def _project_to_record(project: Project) -> dict[str, Any]:
         "name": project.name,
         "brief": project.brief,
         "owner_user_id": project.owner_user_id,
+        "tenant_id": project.tenant_id,
+        "smart_brief": json.dumps(dataclass_to_api_dict(project.smart_brief)) if project.smart_brief else None,
+        "compliance": json.dumps(dataclass_to_api_dict(project.compliance)),
         "current_phase": project.current_phase.value,
         "status": project.status.value,
         "created_at": _serialize_datetime(project.created_at),
@@ -60,10 +68,15 @@ def _project_to_record(project: Project) -> dict[str, Any]:
 
 def _project_from_record(row: sqlite3.Row | dict[str, Any]) -> Project:
     record = dict(row)
+    smart_brief_data = json.loads(record["smart_brief"]) if record.get("smart_brief") else None
+    compliance_data = json.loads(record["compliance"]) if record.get("compliance") else None
     return Project(
         name=record["name"],
         brief=record["brief"],
         owner_user_id=record["owner_user_id"],
+        tenant_id=record.get("tenant_id", "preview"),
+        smart_brief=_smart_brief_from_record(smart_brief_data),
+        compliance=_compliance_from_record(compliance_data),
         project_id=record["project_id"],
         current_phase=DFNPhase(record["current_phase"]),
         status=ProjectStatus(record["status"]),
@@ -75,6 +88,65 @@ def _project_from_record(row: sqlite3.Row | dict[str, Any]) -> Project:
             feedback=record["gate_feedback"],
             decided_at=_deserialize_datetime(record["gate_decided_at"]),
         ),
+    )
+
+
+def _smart_brief_from_record(record: dict[str, Any] | None) -> SmartProductBrief | None:
+    if not record:
+        return None
+    modules = [
+        _module_from_record(item)
+        for item in record.get("modules", [])
+    ]
+    return SmartProductBrief(
+        category=record.get("category", ""),
+        price_point=record.get("price_point", ""),
+        consumer_profile=record.get("consumer_profile", ""),
+        geo_market=record.get("geo_market", ""),
+        competitive_set=list(record.get("competitive_set", [])),
+        brand_guardrails=record.get("brand_guardrails", ""),
+        constraints=record.get("constraints", ""),
+        launch_season=record.get("launch_season", ""),
+        uploaded_docs=list(record.get("uploaded_docs", [])),
+        open_context=record.get("open_context", ""),
+        modules=modules,
+        generated_summary=record.get("generated_summary", ""),
+        version=int(record.get("version", 1)),
+        updated_at=_deserialize_datetime(record.get("updated_at")) or datetime.now(),
+    )
+
+
+def _module_from_record(item: dict[str, Any]) -> SmartBriefModule:
+    revisions = [
+        SmartBriefRevision(
+            version=int(revision.get("version", 1)),
+            content=revision.get("content", ""),
+            updated_at=_deserialize_datetime(revision.get("updated_at")) or datetime.now(),
+            updated_by=revision.get("updated_by", "system"),
+            citations=list(revision.get("citations", [])),
+        )
+        for revision in item.get("revisions", [])
+    ]
+    return SmartBriefModule(
+        key=item["key"],
+        title=item["title"],
+        content=item["content"],
+        citations=list(item.get("citations", [])),
+        version=int(item.get("version", 1)),
+        updated_at=_deserialize_datetime(item.get("updated_at")) or datetime.now(),
+        updated_by=item.get("updated_by", "system"),
+        revisions=revisions,
+    )
+
+
+def _compliance_from_record(record: dict[str, Any] | None) -> ComplianceProfile:
+    if not record:
+        return ComplianceProfile()
+    return ComplianceProfile(
+        status=ComplianceStatus(record.get("status", ComplianceStatus.TRACKED.value)),
+        data_classification=record.get("data_classification", "CONFIDENTIAL"),
+        soc2_controls=list(record.get("soc2_controls", [])) or ComplianceProfile().soc2_controls,
+        notes=record.get("notes", ComplianceProfile().notes),
     )
 
 
@@ -116,6 +188,9 @@ def _output_to_record(output: AgentOutput) -> dict[str, Any]:
         "confidence_score": output.confidence_score,
         "sources": json.dumps(output.sources),
         "project_id": output.project_id,
+        "tenant_id": output.tenant_id,
+        "compliance_status": output.compliance_status.value,
+        "data_classification": output.data_classification,
         "version": output.version,
         "timestamp": _serialize_datetime(output.timestamp),
     }
@@ -130,6 +205,9 @@ def _output_from_record(row: sqlite3.Row | dict[str, Any]) -> AgentOutput:
         confidence_score=record["confidence_score"],
         sources=json.loads(record["sources"]),
         project_id=record["project_id"],
+        tenant_id=record.get("tenant_id", "preview"),
+        compliance_status=ComplianceStatus(record.get("compliance_status", ComplianceStatus.TRACKED.value)),
+        data_classification=record.get("data_classification", "CONFIDENTIAL"),
         version=record["version"],
         timestamp=_deserialize_datetime(record["timestamp"]) or datetime.now(),
         output_id=record["output_id"],
@@ -184,6 +262,9 @@ def _job_to_record(job: Job) -> dict[str, Any]:
         "phase": job.phase.value,
         "status": job.status.value,
         "requested_by": job.requested_by,
+        "tenant_id": job.tenant_id,
+        "compliance_status": job.compliance_status.value,
+        "data_classification": job.data_classification,
         "job_type": job.job_type,
         "created_at": _serialize_datetime(job.created_at),
         "updated_at": _serialize_datetime(job.updated_at),
@@ -199,6 +280,9 @@ def _job_from_record(row: sqlite3.Row | dict[str, Any]) -> Job:
         phase=DFNPhase(record["phase"]),
         status=JobStatus(record["status"]),
         requested_by=record["requested_by"],
+        tenant_id=record.get("tenant_id", "preview"),
+        compliance_status=ComplianceStatus(record.get("compliance_status", ComplianceStatus.TRACKED.value)),
+        data_classification=record.get("data_classification", "CONFIDENTIAL"),
         job_type=record["job_type"],
         created_at=_deserialize_datetime(record["created_at"]) or datetime.now(),
         updated_at=_deserialize_datetime(record["updated_at"]) or datetime.now(),
@@ -213,6 +297,9 @@ def _event_to_record(event: EventLog) -> dict[str, Any]:
         "event_type": event.event_type,
         "level": event.level,
         "message": event.message,
+        "tenant_id": event.tenant_id,
+        "compliance_status": event.compliance_status.value,
+        "data_classification": event.data_classification,
         "timestamp": _serialize_datetime(event.timestamp),
         "job_id": event.job_id,
         "run_id": event.run_id,
@@ -228,6 +315,9 @@ def _event_from_record(row: sqlite3.Row | dict[str, Any]) -> EventLog:
         event_type=record["event_type"],
         level=record["level"],
         message=record["message"],
+        tenant_id=record.get("tenant_id", "preview"),
+        compliance_status=ComplianceStatus(record.get("compliance_status", ComplianceStatus.TRACKED.value)),
+        data_classification=record.get("data_classification", "CONFIDENTIAL"),
         timestamp=_deserialize_datetime(record["timestamp"]) or datetime.now(),
         job_id=record["job_id"],
         run_id=record["run_id"],
@@ -622,6 +712,9 @@ class SQLiteContextStore(ContextStore):
                     name TEXT NOT NULL,
                     brief TEXT NOT NULL,
                     owner_user_id TEXT NOT NULL,
+                    tenant_id TEXT NOT NULL DEFAULT 'preview',
+                    smart_brief TEXT,
+                    compliance TEXT NOT NULL DEFAULT '{}',
                     current_phase TEXT NOT NULL,
                     status TEXT NOT NULL,
                     created_at TEXT NOT NULL,
@@ -652,6 +745,9 @@ class SQLiteContextStore(ContextStore):
                     data TEXT NOT NULL,
                     confidence_score REAL NOT NULL,
                     sources TEXT NOT NULL,
+                    tenant_id TEXT NOT NULL DEFAULT 'preview',
+                    compliance_status TEXT NOT NULL DEFAULT 'TRACKED',
+                    data_classification TEXT NOT NULL DEFAULT 'CONFIDENTIAL',
                     version INTEGER NOT NULL,
                     timestamp TEXT NOT NULL
                 );
@@ -673,6 +769,9 @@ class SQLiteContextStore(ContextStore):
                     phase TEXT NOT NULL,
                     status TEXT NOT NULL,
                     requested_by TEXT NOT NULL,
+                    tenant_id TEXT NOT NULL DEFAULT 'preview',
+                    compliance_status TEXT NOT NULL DEFAULT 'TRACKED',
+                    data_classification TEXT NOT NULL DEFAULT 'CONFIDENTIAL',
                     job_type TEXT NOT NULL,
                     created_at TEXT NOT NULL,
                     updated_at TEXT NOT NULL,
@@ -685,6 +784,9 @@ class SQLiteContextStore(ContextStore):
                     event_type TEXT NOT NULL,
                     level TEXT NOT NULL,
                     message TEXT NOT NULL,
+                    tenant_id TEXT NOT NULL DEFAULT 'preview',
+                    compliance_status TEXT NOT NULL DEFAULT 'TRACKED',
+                    data_classification TEXT NOT NULL DEFAULT 'CONFIDENTIAL',
                     timestamp TEXT NOT NULL,
                     job_id TEXT,
                     run_id TEXT,
@@ -730,9 +832,36 @@ class SQLiteContextStore(ContextStore):
             columns = {row["name"] for row in conn.execute("PRAGMA table_info(projects)").fetchall()}
             if "owner_user_id" not in columns:
                 conn.execute("ALTER TABLE projects ADD COLUMN owner_user_id TEXT NOT NULL DEFAULT 'legacy-demo-user'")
+            if "tenant_id" not in columns:
+                conn.execute("ALTER TABLE projects ADD COLUMN tenant_id TEXT NOT NULL DEFAULT 'preview'")
+            if "smart_brief" not in columns:
+                conn.execute("ALTER TABLE projects ADD COLUMN smart_brief TEXT")
+            if "compliance" not in columns:
+                conn.execute("ALTER TABLE projects ADD COLUMN compliance TEXT NOT NULL DEFAULT '{}'")
             user_columns = {row["name"] for row in conn.execute("PRAGMA table_info(users)").fetchall()}
             if "role" not in user_columns:
                 conn.execute("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'MEMBER'")
+            output_columns = {row["name"] for row in conn.execute("PRAGMA table_info(outputs)").fetchall()}
+            if "tenant_id" not in output_columns:
+                conn.execute("ALTER TABLE outputs ADD COLUMN tenant_id TEXT NOT NULL DEFAULT 'preview'")
+            if "compliance_status" not in output_columns:
+                conn.execute("ALTER TABLE outputs ADD COLUMN compliance_status TEXT NOT NULL DEFAULT 'TRACKED'")
+            if "data_classification" not in output_columns:
+                conn.execute("ALTER TABLE outputs ADD COLUMN data_classification TEXT NOT NULL DEFAULT 'CONFIDENTIAL'")
+            job_columns = {row["name"] for row in conn.execute("PRAGMA table_info(jobs)").fetchall()}
+            if "tenant_id" not in job_columns:
+                conn.execute("ALTER TABLE jobs ADD COLUMN tenant_id TEXT NOT NULL DEFAULT 'preview'")
+            if "compliance_status" not in job_columns:
+                conn.execute("ALTER TABLE jobs ADD COLUMN compliance_status TEXT NOT NULL DEFAULT 'TRACKED'")
+            if "data_classification" not in job_columns:
+                conn.execute("ALTER TABLE jobs ADD COLUMN data_classification TEXT NOT NULL DEFAULT 'CONFIDENTIAL'")
+            event_columns = {row["name"] for row in conn.execute("PRAGMA table_info(event_logs)").fetchall()}
+            if "tenant_id" not in event_columns:
+                conn.execute("ALTER TABLE event_logs ADD COLUMN tenant_id TEXT NOT NULL DEFAULT 'preview'")
+            if "compliance_status" not in event_columns:
+                conn.execute("ALTER TABLE event_logs ADD COLUMN compliance_status TEXT NOT NULL DEFAULT 'TRACKED'")
+            if "data_classification" not in event_columns:
+                conn.execute("ALTER TABLE event_logs ADD COLUMN data_classification TEXT NOT NULL DEFAULT 'CONFIDENTIAL'")
 
     def create_project(self, project: Project) -> Project:
         record = _project_to_record(project)
@@ -740,10 +869,10 @@ class SQLiteContextStore(ContextStore):
             conn.execute(
                 """
                 INSERT INTO projects (
-                    project_id, name, brief, owner_user_id, current_phase, status, created_at, updated_at,
+                    project_id, name, brief, owner_user_id, tenant_id, smart_brief, compliance, current_phase, status, created_at, updated_at,
                     gate_phase, gate_status, gate_feedback, gate_decided_at
                 ) VALUES (
-                    :project_id, :name, :brief, :owner_user_id, :current_phase, :status, :created_at, :updated_at,
+                    :project_id, :name, :brief, :owner_user_id, :tenant_id, :smart_brief, :compliance, :current_phase, :status, :created_at, :updated_at,
                     :gate_phase, :gate_status, :gate_feedback, :gate_decided_at
                 )
                 """,
@@ -785,6 +914,9 @@ class SQLiteContextStore(ContextStore):
                 SET name = :name,
                     brief = :brief,
                     owner_user_id = :owner_user_id,
+                    tenant_id = :tenant_id,
+                    smart_brief = :smart_brief,
+                    compliance = :compliance,
                     current_phase = :current_phase,
                     status = :status,
                     created_at = :created_at,
@@ -830,9 +962,9 @@ class SQLiteContextStore(ContextStore):
             conn.execute(
                 """
                 INSERT INTO outputs (
-                    output_id, project_id, agent_id, output_type, data, confidence_score, sources, version, timestamp
+                    output_id, project_id, agent_id, output_type, data, confidence_score, sources, tenant_id, compliance_status, data_classification, version, timestamp
                 ) VALUES (
-                    :output_id, :project_id, :agent_id, :output_type, :data, :confidence_score, :sources, :version, :timestamp
+                    :output_id, :project_id, :agent_id, :output_type, :data, :confidence_score, :sources, :tenant_id, :compliance_status, :data_classification, :version, :timestamp
                 )
                 """,
                 _output_to_record(output),
@@ -890,9 +1022,9 @@ class SQLiteContextStore(ContextStore):
             conn.execute(
                 """
                 INSERT INTO jobs (
-                    job_id, project_id, phase, status, requested_by, job_type, created_at, updated_at, error
+                    job_id, project_id, phase, status, requested_by, tenant_id, compliance_status, data_classification, job_type, created_at, updated_at, error
                 ) VALUES (
-                    :job_id, :project_id, :phase, :status, :requested_by, :job_type, :created_at, :updated_at, :error
+                    :job_id, :project_id, :phase, :status, :requested_by, :tenant_id, :compliance_status, :data_classification, :job_type, :created_at, :updated_at, :error
                 )
                 """,
                 _job_to_record(job),
@@ -916,6 +1048,9 @@ class SQLiteContextStore(ContextStore):
                     phase = :phase,
                     status = :status,
                     requested_by = :requested_by,
+                    tenant_id = :tenant_id,
+                    compliance_status = :compliance_status,
+                    data_classification = :data_classification,
                     job_type = :job_type,
                     created_at = :created_at,
                     updated_at = :updated_at,
@@ -941,9 +1076,9 @@ class SQLiteContextStore(ContextStore):
             conn.execute(
                 """
                 INSERT INTO event_logs (
-                    event_id, project_id, event_type, level, message, timestamp, job_id, run_id, data
+                    event_id, project_id, event_type, level, message, tenant_id, compliance_status, data_classification, timestamp, job_id, run_id, data
                 ) VALUES (
-                    :event_id, :project_id, :event_type, :level, :message, :timestamp, :job_id, :run_id, :data
+                    :event_id, :project_id, :event_type, :level, :message, :tenant_id, :compliance_status, :data_classification, :timestamp, :job_id, :run_id, :data
                 )
                 """,
                 _event_to_record(event),

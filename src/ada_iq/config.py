@@ -18,6 +18,8 @@ class Settings:
     public_demo_access_enabled: bool
     demo_account_email: str
     demo_account_password: str
+    security_headers_enabled: bool
+    report_brand_title: str
 
 
 def _bool_env(name: str, default: bool) -> bool:
@@ -40,4 +42,6 @@ def load_settings() -> Settings:
         public_demo_access_enabled=_bool_env("ADA_IQ_PUBLIC_DEMO_ACCESS", False),
         demo_account_email=os.getenv("ADA_IQ_DEMO_ACCOUNT_EMAIL", "demo@adaiq.local"),
         demo_account_password=os.getenv("ADA_IQ_DEMO_ACCOUNT_PASSWORD", "demo12345"),
+        security_headers_enabled=_bool_env("ADA_IQ_SECURITY_HEADERS", True),
+        report_brand_title=os.getenv("ADA_IQ_REPORT_BRAND_TITLE", "Ada IQ"),
     )

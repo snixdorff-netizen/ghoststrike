@@ -11,7 +11,16 @@ class InProcessJobQueue:
         self.logger = logger
 
     def enqueue_phase_execution(self, project_id: str, phase, requested_by: str = "human_user") -> Job:
-        job = Job(project_id=project_id, phase=phase, status=JobStatus.QUEUED, requested_by=requested_by)
+        project = self.store.get_project(project_id)
+        job = Job(
+            project_id=project_id,
+            phase=phase,
+            status=JobStatus.QUEUED,
+            requested_by=requested_by,
+            tenant_id=project.tenant_id,
+            compliance_status=project.compliance.status,
+            data_classification=project.compliance.data_classification,
+        )
         self.store.add_job(job)
         self.logger.log(
             project_id,

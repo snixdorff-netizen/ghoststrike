@@ -77,8 +77,9 @@ class StubAgentRunner:
         self.synthesis_provider = synthesis_provider or MockSynthesisProvider()
 
     def run(self, project: Project, spec: AgentSpec) -> AgentOutput:
+        smart_brief_payload = asdict(project.smart_brief) if project.smart_brief else None
         if spec.agent_id == "agent-1":
-            analysis = self.market_provider.analyze(project.name, project.brief)
+            analysis = self.market_provider.analyze(project.name, project.brief, smart_brief=smart_brief_payload)
             return AgentOutput(
                 agent_id=spec.agent_id,
                 output_type="market_intelligence_report",
@@ -94,7 +95,7 @@ class StubAgentRunner:
                 project_id=project.project_id,
             )
         if spec.agent_id == "agent-2":
-            analysis = self.consumer_provider.analyze(project.name, project.brief)
+            analysis = self.consumer_provider.analyze(project.name, project.brief, smart_brief=smart_brief_payload)
             return AgentOutput(
                 agent_id=spec.agent_id,
                 output_type="consumer_insights_report",

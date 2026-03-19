@@ -6,6 +6,7 @@ from ada_iq.config import Settings
 from ada_iq.orchestrator import Orchestrator
 from ada_iq.seeds import ensure_admin_user, seed_demo_projects
 from ada_iq.store import InMemoryContextStore
+from fastapi.testclient import TestClient
 
 
 class AlphaControlsTests(unittest.TestCase):
@@ -49,6 +50,8 @@ class AlphaControlsTests(unittest.TestCase):
                 public_demo_access_enabled=False,
                 demo_account_email="demo@adaiq.local",
                 demo_account_password="demo12345",
+                security_headers_enabled=True,
+                report_brand_title="Ada IQ",
             )
             api_module.orchestrator = Orchestrator(store=InMemoryContextStore())
             with self.assertRaises(api_module.HTTPException) as context:
@@ -118,6 +121,8 @@ class AlphaControlsTests(unittest.TestCase):
                 public_demo_access_enabled=True,
                 demo_account_email="demo@adaiq.local",
                 demo_account_password="demo12345",
+                security_headers_enabled=True,
+                report_brand_title="Ada IQ",
             )
             api_module.orchestrator = Orchestrator(store=InMemoryContextStore())
             ensure_admin_user(api_module.orchestrator, "demo@adaiq.local", "demo12345")
@@ -145,6 +150,8 @@ class AlphaControlsTests(unittest.TestCase):
                 public_demo_access_enabled=True,
                 demo_account_email="demo@adaiq.local",
                 demo_account_password="demo12345",
+                security_headers_enabled=True,
+                report_brand_title="Ada IQ",
             )
 
             access = api_module.get_access_summary()
@@ -153,6 +160,22 @@ class AlphaControlsTests(unittest.TestCase):
             self.assertEqual(access["demo_account_email"], "demo@adaiq.local")
         finally:
             api_module.settings = original_settings
+
+    def test_compliance_summary_exposes_soc2_track(self) -> None:
+        compliance = api_module.get_compliance_summary()
+
+        self.assertEqual(compliance["framework"], "SOC 2 readiness track")
+        self.assertTrue(compliance["controls"])
+        self.assertIn("security response headers", compliance["platform_guards"])
+
+    def test_security_headers_are_applied(self) -> None:
+        client = TestClient(api_module.app)
+
+        response = client.get("/health")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers["x-content-type-options"], "nosniff")
+        self.assertEqual(response.headers["x-frame-options"], "DENY")
 
 
 if __name__ == "__main__":

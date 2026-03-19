@@ -73,6 +73,12 @@ class InvitationStatus(str, Enum):
     ACCEPTED = "ACCEPTED"
 
 
+class ComplianceStatus(str, Enum):
+    TRACKED = "TRACKED"
+    IN_REVIEW = "IN_REVIEW"
+    READY = "READY"
+
+
 @dataclass(slots=True, frozen=True)
 class AgentSpec:
     agent_id: str
@@ -103,6 +109,9 @@ class AgentOutput:
     confidence_score: float
     sources: list[str]
     project_id: str
+    tenant_id: str = "preview"
+    compliance_status: ComplianceStatus = ComplianceStatus.TRACKED
+    data_classification: str = "CONFIDENTIAL"
     version: int = 1
     timestamp: datetime = field(default_factory=utcnow)
     output_id: str = field(default_factory=lambda: str(uuid4()))
@@ -117,10 +126,68 @@ class DecisionGate:
 
 
 @dataclass(slots=True)
+class SmartBriefRevision:
+    version: int
+    content: str
+    updated_at: datetime = field(default_factory=utcnow)
+    updated_by: str = "system"
+    citations: list[str] = field(default_factory=list)
+
+
+@dataclass(slots=True)
+class SmartBriefModule:
+    key: str
+    title: str
+    content: str
+    citations: list[str] = field(default_factory=list)
+    version: int = 1
+    updated_at: datetime = field(default_factory=utcnow)
+    updated_by: str = "system"
+    revisions: list[SmartBriefRevision] = field(default_factory=list)
+
+
+@dataclass(slots=True)
+class SmartProductBrief:
+    category: str
+    price_point: str
+    consumer_profile: str
+    geo_market: str
+    competitive_set: list[str] = field(default_factory=list)
+    brand_guardrails: str = ""
+    constraints: str = ""
+    launch_season: str = ""
+    uploaded_docs: list[str] = field(default_factory=list)
+    open_context: str = ""
+    modules: list[SmartBriefModule] = field(default_factory=list)
+    generated_summary: str = ""
+    version: int = 1
+    updated_at: datetime = field(default_factory=utcnow)
+
+
+@dataclass(slots=True)
+class ComplianceProfile:
+    status: ComplianceStatus = ComplianceStatus.TRACKED
+    data_classification: str = "CONFIDENTIAL"
+    soc2_controls: list[str] = field(
+        default_factory=lambda: [
+            "access_control",
+            "audit_logging",
+            "tenant_isolation",
+            "change_management",
+            "data_retention",
+        ]
+    )
+    notes: str = "Preview workspace tracked for multi-tenant and SOC 2 readiness."
+
+
+@dataclass(slots=True)
 class Project:
     name: str
     brief: str
     owner_user_id: str = "system"
+    tenant_id: str = "preview"
+    smart_brief: SmartProductBrief | None = None
+    compliance: ComplianceProfile = field(default_factory=ComplianceProfile)
     project_id: str = field(default_factory=lambda: str(uuid4()))
     current_phase: DFNPhase = DFNPhase.EMPATHIZE
     status: ProjectStatus = ProjectStatus.DRAFT
@@ -150,6 +217,9 @@ class Job:
     phase: DFNPhase
     status: JobStatus
     requested_by: str
+    tenant_id: str = "preview"
+    compliance_status: ComplianceStatus = ComplianceStatus.TRACKED
+    data_classification: str = "CONFIDENTIAL"
     job_type: str = "phase_execution"
     job_id: str = field(default_factory=lambda: str(uuid4()))
     created_at: datetime = field(default_factory=utcnow)
@@ -166,6 +236,9 @@ class EventLog:
     event_type: str
     level: str
     message: str
+    tenant_id: str = "preview"
+    compliance_status: ComplianceStatus = ComplianceStatus.TRACKED
+    data_classification: str = "CONFIDENTIAL"
     event_id: str = field(default_factory=lambda: str(uuid4()))
     timestamp: datetime = field(default_factory=utcnow)
     job_id: str | None = None

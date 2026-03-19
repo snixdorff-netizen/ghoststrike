@@ -1,7 +1,17 @@
 const SAMPLE_BRIEF = {
-  name: "Ada IQ Private Preview Launch Copilot",
-  brief:
-    "Ada IQ is preparing a private preview of a browser-based AI product-development platform that guides teams through a structured workflow from problem framing to concept generation, evaluation, launch planning, and measurement. The immediate goal is to validate whether early users can understand the workflow, trust the outputs, and complete a meaningful project without guided onboarding. Focus on founders, operators, and innovation leads. Optimize for clarity, useful summaries, visible next steps, and a first session that can be completed in 15 to 25 minutes.",
+  name: "Trail Running Smart Brief Demo",
+  smart_brief: {
+    category: "Trail running footwear",
+    price_point: "$165 premium performance",
+    consumer_profile: "Experienced trail runners who want lightweight grip, underfoot protection, and all-day comfort for technical terrain and mixed-distance training.",
+    geo_market: "United States specialty run and DTC launch",
+    competitive_set: ["Hoka Speedgoat", "Nike Zegama", "Salomon Genesis"],
+    brand_guardrails: "Must feel premium, performance-credible, and visually distinct without drifting into ultra-technical intimidation.",
+    constraints: "Need launch-ready concept framing within one planning cycle and must stay inside premium-margin targets.",
+    launch_season: "Spring 2027",
+    uploaded_docs: ["trail_category_review.pdf", "consumer_signal_summary.docx"],
+    open_context: "Use this as the seed Smart Product Brief to validate the new intake flow, research prompts, and downstream recommendation quality.",
+  },
 };
 
 const state = {
@@ -17,11 +27,68 @@ const state = {
   adminUsers: [],
   adminProjects: [],
   invitations: [],
+  smartBriefExport: null,
+  editingSmartBriefModule: null,
   projectSearch: "",
   projectFilter: "ALL",
+  briefStep: 1,
+  summaryEditOpen: false,
 };
 
 const PHASES = ["EMPATHIZE", "IDEATE", "EVALUATE", "REALIZE", "MEASURE"];
+
+function parseList(value) {
+  return String(value || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function collectSmartBriefForm() {
+  return {
+    category: document.getElementById("brief-category").value.trim(),
+    price_point: document.getElementById("brief-price-point").value.trim(),
+    consumer_profile: document.getElementById("brief-consumer-profile").value.trim(),
+    geo_market: document.getElementById("brief-geo-market").value.trim(),
+    competitive_set: parseList(document.getElementById("brief-competitive-set").value),
+    brand_guardrails: document.getElementById("brief-brand-guardrails").value.trim(),
+    constraints: document.getElementById("brief-constraints").value.trim(),
+    launch_season: document.getElementById("brief-launch-season").value.trim(),
+    uploaded_docs: parseList(document.getElementById("brief-uploaded-docs").value),
+    open_context: document.getElementById("brief-open-context").value.trim(),
+  };
+}
+
+function composeSmartBriefSummary(name, smartBrief) {
+  const competitors = smartBrief.competitive_set.length ? smartBrief.competitive_set.join(", ") : "the incumbent competitive set";
+  return `Build a smart product brief for ${name} in ${smartBrief.category} at ${smartBrief.price_point}. Target ${smartBrief.consumer_profile} in ${smartBrief.geo_market} against ${competitors}. Brand guardrails: ${smartBrief.brand_guardrails || "maintain premium category fit"}. Constraints: ${smartBrief.constraints || "none specified"}. Launch season: ${smartBrief.launch_season || "to be confirmed"}. Additional context: ${smartBrief.open_context || "none provided"}`;
+}
+
+function syncGeneratedBrief() {
+  const name = document.getElementById("project-name").value.trim() || "this product";
+  const summary = composeSmartBriefSummary(name, collectSmartBriefForm());
+  document.getElementById("project-brief").value = summary;
+  document.getElementById("summary-preview-text").textContent = summary;
+}
+
+function setBriefStep(step) {
+  state.briefStep = Math.max(1, Math.min(3, step));
+  document.querySelectorAll("[data-brief-step]").forEach((panel) => {
+    panel.classList.toggle("hidden", Number(panel.dataset.briefStep) !== state.briefStep);
+  });
+  document.querySelectorAll("[data-brief-step-chip]").forEach((chip) => {
+    chip.classList.toggle("active", Number(chip.dataset.briefStepChip) === state.briefStep);
+  });
+  document.getElementById("brief-prev-button").disabled = state.briefStep === 1;
+  document.getElementById("brief-next-button").classList.toggle("hidden", state.briefStep === 3);
+  document.getElementById("brief-submit-button").classList.toggle("hidden", state.briefStep !== 3);
+}
+
+function toggleSummaryEdit(forceOpen) {
+  state.summaryEditOpen = typeof forceOpen === "boolean" ? forceOpen : !state.summaryEditOpen;
+  document.getElementById("summary-edit-wrap").classList.toggle("hidden", !state.summaryEditOpen);
+  document.getElementById("toggle-summary-edit").textContent = state.summaryEditOpen ? "Use Generated Summary" : "Edit Summary";
+}
 
 async function api(path, options = {}) {
   const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
@@ -202,7 +269,7 @@ function actionState(snapshot) {
       canRunPackage: true,
       canRunFullCycle: true,
       canDecide: false,
-      hint: "Start with a single phase or use V1 Package for the fastest end-to-end alpha test.",
+      hint: "Generate Brief Insights first. That creates the initial Smart Product Brief intelligence package and opens the first review gate.",
     };
   }
 
@@ -214,6 +281,49 @@ function actionState(snapshot) {
     canDecide: false,
     hint: "Run the current phase, then decide at the next gate.",
   };
+}
+
+function isInitialBriefExperience(snapshot) {
+  if (!snapshot) return false;
+  const { project } = snapshot;
+  return project.current_phase === "EMPATHIZE" && (project.status === "DRAFT" || project.gate.status === "PENDING");
+}
+
+function renderQuickstartPanel(snapshot) {
+  const panel = document.getElementById("quickstart-panel");
+  const title = document.getElementById("quickstart-title");
+  const description = document.getElementById("quickstart-description");
+  const steps = document.getElementById("quickstart-steps");
+
+  if (!snapshot || !isInitialBriefExperience(snapshot)) {
+    panel.classList.add("hidden");
+    steps.innerHTML = "";
+    return;
+  }
+
+  const gatePending = snapshot.project.gate.status === "PENDING";
+  title.textContent = gatePending ? "Review your first brief insights" : "Generate your first brief insights";
+  description.textContent = gatePending
+    ? "Ada IQ has already generated the first intelligence package from your Smart Product Brief. Review the outputs below, confirm the brief framing, then either advance or revise."
+    : "Your Smart Product Brief is ready. Generate the first intelligence package to turn the brief into a decision-ready starting point.";
+
+  const checklist = gatePending
+    ? [
+        { title: "1. Scan the outputs", detail: "Start with Ada Scout and Ada Empath to check whether the brief is pointed at the right market and customer." },
+        { title: "2. Confirm the brief framing", detail: "Use the Smart Product Brief modules to check that the summary, constraints, and strategic direction match your intent." },
+        { title: "3. Advance or revise", detail: "Approve to move forward, or revise the brief if the first pass is off target." },
+      ]
+    : [
+        { title: "1. Generate the first pass", detail: "Run the opening EMPATHIZE step to create market and consumer intelligence from the brief." },
+        { title: "2. Review the package", detail: "Read the outputs and modules before moving into the broader workflow." },
+        { title: "3. Continue with confidence", detail: "Move into the next package only once the brief foundation looks strong." },
+      ];
+
+  steps.innerHTML = checklist.map((item) => `<article class="quickstart-step">
+      <strong>${escapeHtml(item.title)}</strong>
+      <p>${escapeHtml(item.detail)}</p>
+    </article>`).join("");
+  panel.classList.remove("hidden");
 }
 
 function renderAuth() {
@@ -531,6 +641,71 @@ function renderProjectInsights(snapshot) {
     .join("");
 }
 
+function renderSmartBrief(snapshot) {
+  const container = document.getElementById("smart-brief-modules");
+  const compliance = document.getElementById("compliance-summary");
+  const exportContainer = document.getElementById("smart-brief-export");
+  const smartBrief = snapshot.project.smart_brief;
+
+  if (!smartBrief) {
+    container.innerHTML = '<div class="empty-state compact-empty">This project was created before the Smart Product Brief workflow.</div>';
+  } else {
+    container.innerHTML = (smartBrief.modules || [])
+      .map((module) => `<article class="card">
+        <h4>${escapeHtml(module.title)}</h4>
+        <p>${escapeHtml(module.content)}</p>
+        <p class="small">v${escapeHtml(module.version || 1)} · Updated by ${escapeHtml(module.updated_by || "system")} · Revisions ${escapeHtml((module.revisions || []).length)}</p>
+        ${module.citations?.length ? `<p class="small">Citations: ${escapeHtml(module.citations.join(", "))}</p>` : ""}
+        ${canWrite(snapshot) ? `<button type="button" class="ghost smart-brief-edit-button" data-module-key="${escapeHtml(module.key)}">Edit Module</button>` : ""}
+      </article>`)
+      .join("");
+  }
+
+  const complianceProfile = snapshot.project.compliance || {};
+  compliance.innerHTML = `<strong>Tenant & Compliance</strong><span>${escapeHtml(snapshot.project.tenant_id || "preview")} · ${escapeHtml(complianceProfile.status || "TRACKED")} · ${escapeHtml(complianceProfile.data_classification || "CONFIDENTIAL")}</span>`;
+  if (state.smartBriefExport?.smart_brief_export) {
+    const exportPayload = state.smartBriefExport.smart_brief_export;
+    exportContainer.classList.remove("hidden");
+    exportContainer.innerHTML = `<article class="card smart-brief-export-card">
+      <h4>Brief Export Snapshot</h4>
+      <p>${escapeHtml(exportPayload.summary || "")}</p>
+      <p class="small">Modules: ${escapeHtml((exportPayload.modules || []).length)} · Tenant: ${escapeHtml(exportPayload.tenant_id || "preview")}</p>
+    </article>`;
+  } else {
+    exportContainer.classList.add("hidden");
+    exportContainer.innerHTML = "";
+  }
+  document.querySelectorAll(".smart-brief-edit-button").forEach((button) => {
+    button.addEventListener("click", () => startSmartBriefEdit(button.dataset.moduleKey));
+  });
+}
+
+function startSmartBriefEdit(moduleKey) {
+  const smartBrief = state.selectedSnapshot?.project?.smart_brief;
+  if (!smartBrief) return;
+  const module = (smartBrief.modules || []).find((item) => item.key === moduleKey);
+  if (!module) return;
+  state.editingSmartBriefModule = module.key;
+  document.getElementById("smart-brief-editor").classList.remove("hidden");
+  document.getElementById("smart-brief-editor-title").textContent = `Edit ${module.title}`;
+  document.getElementById("smart-brief-editor-content").value = module.content;
+  const history = (module.revisions || [])
+    .slice()
+    .reverse()
+    .slice(0, 3)
+    .map((revision) => `v${revision.version} · ${revision.updated_by}`)
+    .join(" | ");
+  document.getElementById("smart-brief-editor-title").textContent = history
+    ? `Edit ${module.title} (${history})`
+    : `Edit ${module.title}`;
+}
+
+function cancelSmartBriefEdit() {
+  state.editingSmartBriefModule = null;
+  document.getElementById("smart-brief-editor").classList.add("hidden");
+  document.getElementById("smart-brief-editor-content").value = "";
+}
+
 function renderProjectDetail() {
   const emptyState = document.getElementById("empty-state");
   const detail = document.getElementById("project-detail");
@@ -546,6 +721,7 @@ function renderProjectDetail() {
   const snapshot = state.selectedSnapshot;
   const { project, outputs, messages, runs } = snapshot;
   const actions = actionState(snapshot);
+  const initialExperience = isInitialBriefExperience(snapshot);
 
   emptyState.classList.add("hidden");
   detail.classList.remove("hidden");
@@ -563,8 +739,18 @@ function renderProjectDetail() {
   document.getElementById("detail-status-badge").textContent = project.status;
   document.getElementById("detail-gate-badge").textContent = `Gate ${project.gate.status}`;
   document.getElementById("action-hint").innerHTML = `<div class="workflow-callout"><strong>Recommended Next Move</strong><span>${escapeHtml(actions.hint)}</span></div>`;
+  renderQuickstartPanel(snapshot);
   renderPhaseRail(project);
   renderProjectInsights(snapshot);
+  renderSmartBrief(snapshot);
+  document.getElementById("run-phase-button").textContent =
+    project.current_phase === "EMPATHIZE" && project.status === "DRAFT"
+      ? "Generate Brief Insights"
+      : "Run Current Phase";
+  document.getElementById("approve-button").textContent = initialExperience ? "Approve Brief Insights" : "Approve Gate";
+  document.getElementById("reject-button").textContent = initialExperience ? "Revise Brief" : "Reject Gate";
+  document.getElementById("run-v1-button").textContent = initialExperience ? "Continue to V1 Package" : "Run V1 Package";
+  document.getElementById("advanced-actions").classList.toggle("hidden", initialExperience);
 
   document.getElementById("run-phase-button").disabled = !actions.canRunPhase;
   document.getElementById("queue-phase-button").disabled = !actions.canQueuePhase;
@@ -718,6 +904,48 @@ async function refreshSelectedProject() {
   await selectProject(state.selectedProjectId);
 }
 
+async function loadSmartBriefExport() {
+  if (!state.selectedProjectId) return;
+  state.smartBriefExport = await api(`/projects/${state.selectedProjectId}/smart-brief`);
+  renderProjectDetail();
+  showNotice("Loaded Smart Product Brief export snapshot.", "success");
+}
+
+async function saveSmartBriefEdit() {
+  if (!state.selectedProjectId || !state.editingSmartBriefModule) return;
+  const packagePayload = await api(`/projects/${state.selectedProjectId}/smart-brief/modules/${state.editingSmartBriefModule}`, {
+    method: "PATCH",
+    body: JSON.stringify({ content: document.getElementById("smart-brief-editor-content").value }),
+  });
+  state.smartBriefExport = packagePayload;
+  state.selectedSnapshot = await api(`/projects/${state.selectedProjectId}`);
+  cancelSmartBriefEdit();
+  renderProjectDetail();
+  showNotice("Smart Product Brief module updated.", "success");
+}
+
+async function downloadSmartBriefExport() {
+  if (!state.selectedProjectId) return;
+  const packagePayload = await api(`/projects/${state.selectedProjectId}/smart-brief`);
+  const blob = new Blob([JSON.stringify(packagePayload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${packagePayload.project_name || "smart-brief"}`.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-smart-brief.json";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+  state.smartBriefExport = packagePayload;
+  renderProjectDetail();
+  showNotice("Downloaded Smart Product Brief package.", "success");
+}
+
+function openSmartBriefReport() {
+  if (!state.selectedProjectId) return;
+  window.open(`/projects/${state.selectedProjectId}/smart-brief/report`, "_blank", "noopener,noreferrer");
+}
+
 async function submitAuth(path, email, password) {
   const response = await api(path, { method: "POST", body: JSON.stringify({ email, password }) });
   state.token = response.token;
@@ -731,21 +959,38 @@ async function submitAuth(path, email, password) {
 
 async function createProject(event) {
   event.preventDefault();
-  const snapshot = await api("/projects", {
+  const smartBrief = collectSmartBriefForm();
+  const createdSnapshot = await api("/projects", {
     method: "POST",
     body: JSON.stringify({
       name: document.getElementById("project-name").value,
       brief: document.getElementById("project-brief").value,
+      tenant_id: "preview",
+      smart_brief: smartBrief,
     }),
   });
   document.getElementById("create-form").reset();
-  await Promise.all([loadProjects(), loadAdminData()]);
-  state.selectedProjectId = snapshot.project.project_id;
-  state.selectedSnapshot = snapshot;
-  await loadProjectSharing(snapshot.project.project_id);
-  renderProjects();
-  renderProjectDetail();
-  showNotice(`Created project ${snapshot.project.name}.`, "success");
+  setBriefStep(1);
+  toggleSummaryEdit(false);
+  syncGeneratedBrief();
+  try {
+    const snapshot = await api(`/projects/${createdSnapshot.project.project_id}/start`, { method: "POST" });
+    await Promise.all([loadProjects(), loadAdminData()]);
+    state.selectedProjectId = snapshot.project.project_id;
+    state.selectedSnapshot = snapshot;
+    await loadProjectSharing(snapshot.project.project_id);
+    renderProjects();
+    renderProjectDetail();
+    showNotice(`Created ${snapshot.project.name}. Your first brief insights are ready for review.`, "success");
+  } catch (error) {
+    await Promise.all([loadProjects(), loadAdminData()]);
+    state.selectedProjectId = createdSnapshot.project.project_id;
+    state.selectedSnapshot = await api(`/projects/${createdSnapshot.project.project_id}`);
+    await loadProjectSharing(createdSnapshot.project.project_id);
+    renderProjects();
+    renderProjectDetail();
+    showNotice(`Created ${createdSnapshot.project.name}, but the first insight pass did not finish automatically. Open the project and click Generate Brief Insights. ${error.message}`, "error");
+  }
 }
 
 async function createSampleProjectFromTemplate() {
@@ -753,17 +998,33 @@ async function createSampleProjectFromTemplate() {
     showNotice("Log in before creating the sample project.", "info");
     return;
   }
-  const snapshot = await api("/projects", {
+  const createdSnapshot = await api("/projects", {
     method: "POST",
-    body: JSON.stringify(SAMPLE_BRIEF),
+    body: JSON.stringify({
+      name: SAMPLE_BRIEF.name,
+      brief: composeSmartBriefSummary(SAMPLE_BRIEF.name, SAMPLE_BRIEF.smart_brief),
+      tenant_id: "preview",
+      smart_brief: SAMPLE_BRIEF.smart_brief,
+    }),
   });
-  await Promise.all([loadProjects(), loadAdminData()]);
-  state.selectedProjectId = snapshot.project.project_id;
-  state.selectedSnapshot = snapshot;
-  await loadProjectSharing(snapshot.project.project_id);
-  renderProjects();
-  renderProjectDetail();
-  showNotice(`Created sample project ${snapshot.project.name}.`, "success");
+  try {
+    const snapshot = await api(`/projects/${createdSnapshot.project.project_id}/start`, { method: "POST" });
+    await Promise.all([loadProjects(), loadAdminData()]);
+    state.selectedProjectId = snapshot.project.project_id;
+    state.selectedSnapshot = snapshot;
+    await loadProjectSharing(snapshot.project.project_id);
+    renderProjects();
+    renderProjectDetail();
+    showNotice(`Created sample project ${snapshot.project.name}. The first brief insights are already generated.`, "success");
+  } catch (error) {
+    await Promise.all([loadProjects(), loadAdminData()]);
+    state.selectedProjectId = createdSnapshot.project.project_id;
+    state.selectedSnapshot = await api(`/projects/${createdSnapshot.project.project_id}`);
+    await loadProjectSharing(createdSnapshot.project.project_id);
+    renderProjects();
+    renderProjectDetail();
+    showNotice(`Created sample project ${createdSnapshot.project.name}, but the first insight pass needs to be started manually. ${error.message}`, "error");
+  }
 }
 
 async function runCurrentPhase() {
@@ -876,8 +1137,19 @@ async function submitProjectFeedback(event) {
 
 function fillSampleBrief() {
   document.getElementById("project-name").value = SAMPLE_BRIEF.name;
-  document.getElementById("project-brief").value = SAMPLE_BRIEF.brief;
-  showNotice("Loaded the sample alpha brief into the project form.", "info");
+  document.getElementById("brief-category").value = SAMPLE_BRIEF.smart_brief.category;
+  document.getElementById("brief-price-point").value = SAMPLE_BRIEF.smart_brief.price_point;
+  document.getElementById("brief-consumer-profile").value = SAMPLE_BRIEF.smart_brief.consumer_profile;
+  document.getElementById("brief-geo-market").value = SAMPLE_BRIEF.smart_brief.geo_market;
+  document.getElementById("brief-competitive-set").value = SAMPLE_BRIEF.smart_brief.competitive_set.join(", ");
+  document.getElementById("brief-brand-guardrails").value = SAMPLE_BRIEF.smart_brief.brand_guardrails;
+  document.getElementById("brief-constraints").value = SAMPLE_BRIEF.smart_brief.constraints;
+  document.getElementById("brief-launch-season").value = SAMPLE_BRIEF.smart_brief.launch_season;
+  document.getElementById("brief-uploaded-docs").value = SAMPLE_BRIEF.smart_brief.uploaded_docs.join(", ");
+  document.getElementById("brief-open-context").value = SAMPLE_BRIEF.smart_brief.open_context;
+  syncGeneratedBrief();
+  setBriefStep(3);
+  showNotice("Loaded the sample smart brief into the project form.", "info");
 }
 
 function fillDemoLogin() {
@@ -943,6 +1215,35 @@ function bindEvents() {
   });
 
   document.getElementById("sample-brief-button").addEventListener("click", fillSampleBrief);
+  document.getElementById("export-smart-brief-button").addEventListener("click", async () => {
+    try {
+      await loadSmartBriefExport();
+    } catch (error) {
+      showNotice(error.message, "error");
+    }
+  });
+  document.getElementById("download-smart-brief-button").addEventListener("click", async () => {
+    try {
+      await downloadSmartBriefExport();
+    } catch (error) {
+      showNotice(error.message, "error");
+    }
+  });
+  document.getElementById("open-smart-brief-report-button").addEventListener("click", openSmartBriefReport);
+  document.getElementById("cancel-smart-brief-edit-button").addEventListener("click", cancelSmartBriefEdit);
+  document.getElementById("save-smart-brief-edit-button").addEventListener("click", async () => {
+    try {
+      await saveSmartBriefEdit();
+    } catch (error) {
+      showNotice(error.message, "error");
+    }
+  });
+  document.querySelectorAll("[data-brief-step-chip]").forEach((chip) => {
+    chip.addEventListener("click", () => setBriefStep(Number(chip.dataset.briefStepChip)));
+  });
+  document.getElementById("brief-prev-button").addEventListener("click", () => setBriefStep(state.briefStep - 1));
+  document.getElementById("brief-next-button").addEventListener("click", () => setBriefStep(state.briefStep + 1));
+  document.getElementById("toggle-summary-edit").addEventListener("click", () => toggleSummaryEdit());
   document.getElementById("create-sample-project-button").addEventListener("click", async () => {
     try {
       await createSampleProjectFromTemplate();
@@ -973,6 +1274,21 @@ function bindEvents() {
     } catch (error) {
       showNotice(error.message, "error");
     }
+  });
+  [
+    "project-name",
+    "brief-category",
+    "brief-price-point",
+    "brief-consumer-profile",
+    "brief-geo-market",
+    "brief-competitive-set",
+    "brief-brand-guardrails",
+    "brief-constraints",
+    "brief-launch-season",
+    "brief-uploaded-docs",
+    "brief-open-context",
+  ].forEach((id) => {
+    document.getElementById(id).addEventListener("input", syncGeneratedBrief);
   });
 
   document.getElementById("admin-create-user-form").addEventListener("submit", async (event) => {
@@ -1067,6 +1383,9 @@ function bindEvents() {
 
 async function boot() {
   bindEvents();
+  setBriefStep(1);
+  toggleSummaryEdit(false);
+  syncGeneratedBrief();
   await Promise.all([loadMetadata(), loadCurrentUser()]);
   await Promise.all([loadProjects(), loadAdminData()]);
   renderProjectDetail();

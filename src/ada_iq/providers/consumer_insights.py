@@ -6,18 +6,18 @@ from abc import ABC, abstractmethod
 
 class ConsumerInsightsProvider(ABC):
     @abstractmethod
-    def analyze(self, project_name: str, brief: str) -> dict:
+    def analyze(self, project_name: str, brief: str, smart_brief: dict | None = None) -> dict:
         raise NotImplementedError
 
 
 class MockConsumerInsightsProvider(ConsumerInsightsProvider):
     """Deterministic provider that mimics an external consumer-insights stack."""
 
-    def analyze(self, project_name: str, brief: str) -> dict:
-        segment = self._extract_segment(brief)
-        need_state = self._extract_need_state(brief)
-        occasion = self._extract_occasion(brief)
-        sentiment = self._sentiment_mix(brief)
+    def analyze(self, project_name: str, brief: str, smart_brief: dict | None = None) -> dict:
+        segment = self._extract_segment(brief, smart_brief)
+        need_state = self._extract_need_state(brief, smart_brief)
+        occasion = self._extract_occasion(brief, smart_brief)
+        sentiment = self._sentiment_mix(brief, smart_brief)
 
         return {
             "confidence_score": 0.72,
@@ -81,7 +81,9 @@ class MockConsumerInsightsProvider(ConsumerInsightsProvider):
             },
         }
 
-    def _extract_segment(self, brief: str) -> str:
+    def _extract_segment(self, brief: str, smart_brief: dict | None = None) -> str:
+        if smart_brief and smart_brief.get("consumer_profile"):
+            return str(smart_brief["consumer_profile"]).strip()
         match = re.search(r"targeting ([^.]+?)(?: who| with| focused|\.|,)", brief, re.IGNORECASE)
         if match:
             return match.group(1).strip()
@@ -90,7 +92,13 @@ class MockConsumerInsightsProvider(ConsumerInsightsProvider):
             return match.group(1).strip()
         return "time-constrained professionals"
 
-    def _extract_need_state(self, brief: str) -> str:
+    def _extract_need_state(self, brief: str, smart_brief: dict | None = None) -> str:
+        if smart_brief and smart_brief.get("open_context"):
+            lower_context = str(smart_brief["open_context"]).lower()
+            if "comfort" in lower_context:
+                return "all-day comfort without sacrificing premium perception"
+            if "lightweight" in lower_context or "grip" in lower_context:
+                return "reliable performance under changing conditions"
         lower = brief.lower()
         if "comfort" in lower:
             return "all-day comfort without sacrificing premium perception"
@@ -100,7 +108,13 @@ class MockConsumerInsightsProvider(ConsumerInsightsProvider):
             return "safe, intuitive use in busy environments"
         return "clear functional improvement over incumbent products"
 
-    def _extract_occasion(self, brief: str) -> str:
+    def _extract_occasion(self, brief: str, smart_brief: dict | None = None) -> str:
+        if smart_brief and smart_brief.get("category"):
+            category = str(smart_brief["category"]).lower()
+            if "trail" in category:
+                return "high-exertion outdoor sessions"
+            if "kitchen" in category:
+                return "weekday meal-prep routines"
         lower = brief.lower()
         if "urban professionals" in lower or "professional" in lower:
             return "work-to-evening transitions"
@@ -110,7 +124,11 @@ class MockConsumerInsightsProvider(ConsumerInsightsProvider):
             return "weekday meal-prep routines"
         return "repeat high-friction daily routines"
 
-    def _sentiment_mix(self, brief: str) -> dict[str, float]:
+    def _sentiment_mix(self, brief: str, smart_brief: dict | None = None) -> dict[str, float]:
+        if smart_brief and smart_brief.get("brand_guardrails"):
+            lower_guardrails = str(smart_brief["brand_guardrails"]).lower()
+            if "premium" in lower_guardrails:
+                return {"positive": 0.58, "neutral": 0.27, "negative": 0.15}
         lower = brief.lower()
         if "premium" in lower:
             return {"positive": 0.58, "neutral": 0.27, "negative": 0.15}

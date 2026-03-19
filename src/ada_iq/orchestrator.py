@@ -1,8 +1,13 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
+from ada_iq.models import utcnow
+
 from ada_iq.auth import hash_password, new_session_token, verify_password
 from ada_iq.agents import PHASE_TO_AGENTS, StubAgentRunner
 from ada_iq.models import (
+    ComplianceProfile,
+    ComplianceStatus,
     DFNPhase,
     ExecutionRun,
     GateStatus,
@@ -15,6 +20,9 @@ from ada_iq.models import (
     ProjectStatus,
     RunStatus,
     Session,
+    SmartBriefModule,
+    SmartBriefRevision,
+    SmartProductBrief,
     User,
     UserRole,
     InvitationStatus,
@@ -168,8 +176,245 @@ class Orchestrator:
         )
         return created
 
-    def create_project(self, name: str, brief: str, owner_user_id: str = "system") -> Project:
-        project = Project(name=name, brief=brief, owner_user_id=owner_user_id)
+    def _coerce_list(self, value: Sequence[str] | str | None) -> list[str]:
+        if value is None:
+            return []
+        if isinstance(value, str):
+            return [item.strip() for item in value.split(",") if item.strip()]
+        return [str(item).strip() for item in value if str(item).strip()]
+
+    def _build_smart_brief_summary(self, name: str, brief: SmartProductBrief) -> str:
+        competitor_text = ", ".join(brief.competitive_set) if brief.competitive_set else "the incumbent competitive set"
+        constraints_text = brief.constraints or "normal launch, technical, and brand constraints"
+        return (
+            f"Build a smart product brief for {name} in the {brief.category} category at {brief.price_point}. "
+            f"Target {brief.consumer_profile} in {brief.geo_market} against {competitor_text}. "
+            f"Respect these brand guardrails: {brief.brand_guardrails or 'maintain premium category fit'}. "
+            f"Account for these constraints: {constraints_text}. "
+            f"Launch timing centers on {brief.launch_season or 'the next planning cycle'}. "
+            f"Additional context: {brief.open_context or 'No extra context provided.'}"
+        )
+
+    def _build_smart_brief_modules(self, brief: SmartProductBrief) -> list[SmartBriefModule]:
+        competitors = ", ".join(brief.competitive_set) or "the incumbent competitive set"
+        constraints = brief.constraints or "No explicit constraints captured yet."
+        guardrails = brief.brand_guardrails or "Maintain premium category fit and clear brand coherence."
+        return [
+            SmartBriefModule(
+                "executive_summary",
+                "Executive Summary",
+                brief.generated_summary,
+                ["human_project_brief"],
+            ),
+            SmartBriefModule(
+                "consumer_insight",
+                "Consumer Insight",
+                f"The initial wedge centers on {brief.consumer_profile}. The working assumption is that this buyer will respond when the product clearly resolves a repeat use-case friction and signals premium confidence at {brief.price_point}.",
+                ["human_project_brief"],
+            ),
+            SmartBriefModule(
+                "market_context",
+                "Market Context",
+                f"The first market focus is {brief.geo_market}. Ada IQ should treat this as the launch wedge and evaluate whether the category dynamics support premium positioning, specialized channel adoption, and a fast proof-of-demand cycle.",
+                ["human_project_brief"],
+            ),
+            SmartBriefModule(
+                "competitive_intelligence",
+                "Competitive Intelligence",
+                f"The current comparison set is {competitors}. The brief should frame differentiation around where incumbents leave a clear experiential, brand, or use-case gap rather than competing on generic parity.",
+                ["human_project_brief"],
+            ),
+            SmartBriefModule(
+                "trend_signal",
+                "Trend Signal",
+                f"Launch timing is anchored to {brief.launch_season or 'the next planning cycle'}. The trend lens should examine whether consumer behavior, category premiumization, and channel timing create urgency for this concept now rather than later.",
+                ["human_project_brief"],
+            ),
+            SmartBriefModule(
+                "strategic_directions",
+                "Strategic Directions",
+                f"Strategically, Ada IQ should protect these brand guardrails: {guardrails} The resulting concept directions should feel commercially specific, not generically innovative.",
+                ["human_project_brief"],
+            ),
+            SmartBriefModule(
+                "design_requirements",
+                "Design Requirements",
+                f"Design should prioritize a product that feels credible to {brief.consumer_profile}, earns its {brief.price_point} positioning, and creates visible differentiation without violating the stated brand rules.",
+                ["human_project_brief"],
+            ),
+            SmartBriefModule(
+                "technical_constraints",
+                "Technical Constraints",
+                f"Key constraints captured in the brief: {constraints} These constraints should shape feasibility scoring, concept narrowing, and launch sequencing from the outset.",
+                ["human_project_brief"],
+            ),
+            SmartBriefModule(
+                "success_metrics",
+                "Success Metrics",
+                "The first success bar is simple: prove that the brief creates sharper market framing, more credible consumer insight, and a clearer decision path than a traditional product intake. Secondary metrics should track concept confidence, stakeholder clarity, and readiness to advance.",
+                ["ada_iq_system"],
+            ),
+        ]
+
+    def _build_smart_brief(self, payload: dict | None, name: str, brief: str) -> SmartProductBrief | None:
+        if payload is None:
+            return None
+        smart_brief = SmartProductBrief(
+            category=payload.get("category", "").strip(),
+            price_point=payload.get("price_point", "").strip(),
+            consumer_profile=payload.get("consumer_profile", "").strip(),
+            geo_market=payload.get("geo_market", "").strip(),
+            competitive_set=self._coerce_list(payload.get("competitive_set")),
+            brand_guardrails=payload.get("brand_guardrails", "").strip(),
+            constraints=payload.get("constraints", "").strip(),
+            launch_season=payload.get("launch_season", "").strip(),
+            uploaded_docs=self._coerce_list(payload.get("uploaded_docs")),
+            open_context=payload.get("open_context", "").strip(),
+        )
+        smart_brief.generated_summary = brief or self._build_smart_brief_summary(name, smart_brief)
+        smart_brief.modules = self._build_smart_brief_modules(smart_brief)
+        return smart_brief
+
+    def _record_module_revision(self, module: SmartBriefModule, updated_by: str) -> None:
+        module.revisions.append(
+            SmartBriefRevision(
+                version=module.version,
+                content=module.content,
+                updated_at=module.updated_at,
+                updated_by=updated_by,
+                citations=list(module.citations),
+            )
+        )
+
+    def _refresh_smart_brief_from_outputs(self, project: Project) -> None:
+        if not project.smart_brief:
+            return
+        outputs = {
+            output.agent_id: output
+            for output in self.store.list_outputs(project.project_id)
+            if output.agent_id in {"agent-1", "agent-2"}
+        }
+        modules_by_key = {module.key: module for module in project.smart_brief.modules}
+
+        scout = outputs.get("agent-1")
+        if scout:
+            market_context = modules_by_key.get("market_context")
+            if market_context:
+                self._record_module_revision(market_context, market_context.updated_by)
+                market_context.content = (
+                    f"{scout.data.get('summary', market_context.content)} Geography focus: {scout.data.get('geography_focus', project.smart_brief.geo_market)}."
+                )
+                market_context.citations = [
+                    citation.get("title", "Source")
+                    for citation in scout.data.get("citations", [])
+                ]
+                market_context.version += 1
+                market_context.updated_at = utcnow()
+                market_context.updated_by = "Ada Scout"
+            competitive = modules_by_key.get("competitive_intelligence")
+            if competitive:
+                self._record_module_revision(competitive, competitive.updated_by)
+                competitive.content = (
+                    f"Primary comparison set: {', '.join(scout.data.get('top_competitors', project.smart_brief.competitive_set))}. "
+                    f"Whitespace: {scout.data.get('whitespace_opportunity', competitive.content)}"
+                )
+                competitive.citations = [
+                    citation.get("title", "Source")
+                    for citation in scout.data.get("citations", [])
+                ]
+                competitive.version += 1
+                competitive.updated_at = utcnow()
+                competitive.updated_by = "Ada Scout"
+            trend = modules_by_key.get("trend_signal")
+            if trend:
+                self._record_module_revision(trend, trend.updated_by)
+                trend.content = (
+                    f"Trend signals: {', '.join(scout.data.get('trend_signals', [])) or trend.content}"
+                )
+                trend.citations = [citation.get("title", "Source") for citation in scout.data.get("citations", [])]
+                trend.version += 1
+                trend.updated_at = utcnow()
+                trend.updated_by = "Ada Scout"
+
+        empath = outputs.get("agent-2")
+        if empath:
+            consumer = modules_by_key.get("consumer_insight")
+            if consumer:
+                self._record_module_revision(consumer, consumer.updated_by)
+                persona = empath.data.get("primary_persona", {})
+                consumer.content = (
+                    f"{empath.data.get('summary', consumer.content)} Primary persona: {persona.get('name', 'Unknown')} with job-to-be-done '{persona.get('job_to_be_done', '')}'."
+                )
+                consumer.citations = [
+                    citation.get("title", "Source")
+                    for citation in empath.data.get("citations", [])
+                ]
+                consumer.version += 1
+                consumer.updated_at = utcnow()
+                consumer.updated_by = "Ada Empath"
+            design = modules_by_key.get("design_requirements")
+            if design:
+                self._record_module_revision(design, design.updated_by)
+                needs = empath.data.get("need_hierarchy", [])
+                primary_need = needs[0]["need"] if needs else "clear functional improvement"
+                design.content = (
+                    f"Design should prioritize {primary_need} for {project.smart_brief.consumer_profile}, while preserving {project.smart_brief.brand_guardrails or 'premium category fit'}."
+                )
+                design.citations = [citation.get("title", "Source") for citation in empath.data.get("citations", [])]
+                design.version += 1
+                design.updated_at = utcnow()
+                design.updated_by = "Ada Empath"
+        project.smart_brief.version += 1
+        project.smart_brief.updated_at = utcnow()
+
+    def update_smart_brief_module(
+        self,
+        project_id: str,
+        module_key: str,
+        content: str,
+        owner_user_id: str,
+    ) -> dict:
+        project = self._get_project_with_access(project_id, owner_user_id, require_write=True)
+        if not project.smart_brief:
+            raise ValueError("This project does not have a Smart Product Brief.")
+        module = next((item for item in project.smart_brief.modules if item.key == module_key), None)
+        if module is None:
+            raise KeyError(module_key)
+        self._record_module_revision(module, module.updated_by)
+        module.content = content.strip()
+        module.version += 1
+        module.updated_at = utcnow()
+        module.updated_by = self._actor_label(owner_user_id)
+        project.smart_brief.version += 1
+        project.smart_brief.updated_at = utcnow()
+        self.store.save_project(project)
+        self.logger.log(
+            project.project_id,
+            event_type="smart_brief_module_updated",
+            level="INFO",
+            message=f"Updated Smart Product Brief module {module.title}.",
+            data={"actor": self._actor_label(owner_user_id), "module_key": module.key, "module_version": module.version},
+        )
+        return self.get_smart_brief_package(project_id, owner_user_id)
+
+    def create_project(
+        self,
+        name: str,
+        brief: str,
+        owner_user_id: str = "system",
+        smart_brief: dict | None = None,
+        tenant_id: str = "preview",
+    ) -> Project:
+        structured_brief = self._build_smart_brief(smart_brief, name, brief)
+        brief_text = structured_brief.generated_summary if structured_brief else brief
+        project = Project(
+            name=name,
+            brief=brief_text,
+            owner_user_id=owner_user_id,
+            tenant_id=tenant_id or "preview",
+            smart_brief=structured_brief,
+            compliance=ComplianceProfile(status=ComplianceStatus.TRACKED),
+        )
         return self.store.create_project(project)
 
     def _actor_label(self, user_id: str | None) -> str:
@@ -315,15 +560,62 @@ class Orchestrator:
 
     def export_project_snapshot(self, project_id: str, owner_user_id: str | None = None) -> dict:
         snapshot = self.get_project_snapshot(project_id, owner_user_id)
+        smart_brief = snapshot["project"].get("smart_brief")
         return {
             "export_version": "1.0",
             "project_id": project_id,
             "snapshot": snapshot,
+            "smart_brief_export": {
+                "project_name": snapshot["project"]["name"],
+                "tenant_id": snapshot["project"].get("tenant_id"),
+                "compliance": snapshot["project"].get("compliance"),
+                "summary": smart_brief.get("generated_summary") if smart_brief else snapshot["project"]["brief"],
+                "modules": smart_brief.get("modules", []) if smart_brief else [],
+            },
             "partner_review_notes": [
                 "Sprint 1.0 includes provider-backed Ada Scout and Ada Empath paths.",
                 "An in-process queue abstraction and structured event log are available for operational review.",
                 "SQLite is used for durability in the packaged demo environment.",
             ],
+        }
+
+    def get_smart_brief_package(self, project_id: str, owner_user_id: str | None = None) -> dict:
+        snapshot = self.get_project_snapshot(project_id, owner_user_id)
+        project = snapshot["project"]
+        smart_brief = project.get("smart_brief")
+        if not smart_brief:
+            raise ValueError("This project does not have a Smart Product Brief package.")
+
+        related_outputs = [
+            output
+            for output in snapshot["outputs"]
+            if output["agent_id"] in {"agent-1", "agent-2"}
+        ]
+        return {
+            "package_version": "1.0",
+            "package_type": "smart_product_brief",
+            "project_id": project_id,
+            "project_name": project["name"],
+            "tenant_id": project.get("tenant_id"),
+            "compliance": project.get("compliance"),
+            "summary": smart_brief.get("generated_summary"),
+            "input": {
+                "category": smart_brief.get("category"),
+                "price_point": smart_brief.get("price_point"),
+                "consumer_profile": smart_brief.get("consumer_profile"),
+                "geo_market": smart_brief.get("geo_market"),
+                "competitive_set": smart_brief.get("competitive_set", []),
+                "brand_guardrails": smart_brief.get("brand_guardrails"),
+                "constraints": smart_brief.get("constraints"),
+                "launch_season": smart_brief.get("launch_season"),
+                "uploaded_docs": smart_brief.get("uploaded_docs", []),
+                "open_context": smart_brief.get("open_context"),
+            },
+            "modules": smart_brief.get("modules", []),
+            "supporting_outputs": related_outputs,
+            "recommended_next_step": (
+                "Review the Smart Product Brief modules, then approve the EMPATHIZE gate or continue into the V1 package."
+            ),
         }
 
     def complete_first_seven_steps(self, project_id: str, owner_user_id: str | None = None, approval_feedback: str = "Proceed to IDEATE") -> dict:
@@ -498,6 +790,9 @@ class Orchestrator:
                 )
             )
             output = self.runner.run(project, spec)
+            output.tenant_id = project.tenant_id
+            output.compliance_status = project.compliance.status
+            output.data_classification = project.compliance.data_classification
             self.store.add_output(output)
             self.store.add_message(
                 Message(
@@ -510,6 +805,9 @@ class Orchestrator:
                     step="return_result",
                 )
             )
+
+        self._refresh_smart_brief_from_outputs(project)
+        self.store.save_project(project)
 
         project.status = ProjectStatus.WAITING_FOR_GATE
         project.gate.status = GateStatus.PENDING

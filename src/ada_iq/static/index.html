@@ -181,18 +181,112 @@
               <section class="card create-card">
                 <div class="card-heading">
                   <h2>Start New Project</h2>
-                  <p>Create a project from a product brief or launch the curated sample.</p>
+                  <p>Build a Smart Product Brief in three short steps, then generate the first round of intelligence automatically.</p>
                 </div>
                 <form id="create-form" class="stack hidden">
-                  <label>
-                    <span>Project Name</span>
-                    <input id="project-name" name="name" maxlength="120" placeholder="Ada IQ Private Preview Launch Copilot" required />
-                  </label>
-                  <label>
-                    <span>Project Brief</span>
-                    <textarea id="project-brief" name="brief" rows="6" placeholder="Describe the product, target customer, constraints, and launch goal." required></textarea>
-                  </label>
-                  <button type="submit">Create Project</button>
+                  <div class="brief-intro">
+                    <div class="brief-pill-row">
+                      <span class="pill">Minimum fields required</span>
+                      <span class="pill">Auto-generated summary</span>
+                      <span class="pill">First insights generated on submit</span>
+                    </div>
+                    <p class="small">Fastest path: fill the required fields, skip the optional details, and let Ada IQ generate the first brief intelligence package automatically.</p>
+                  </div>
+
+                  <div class="brief-stepper">
+                    <button type="button" class="brief-step-chip active" data-brief-step-chip="1">1. Product</button>
+                    <button type="button" class="brief-step-chip" data-brief-step-chip="2">2. Customer</button>
+                    <button type="button" class="brief-step-chip" data-brief-step-chip="3">3. Review</button>
+                  </div>
+
+                  <section class="brief-step-panel" data-brief-step="1">
+                    <div class="card-heading">
+                      <h3>Step 1: Product and market</h3>
+                      <p>Capture the minimum commercial framing needed to create a strong brief.</p>
+                    </div>
+                    <label>
+                      <span>Project Name</span>
+                      <input id="project-name" name="name" maxlength="120" placeholder="Trail Running Smart Brief Demo" required />
+                    </label>
+                    <label>
+                      <span>Product Category</span>
+                      <input id="brief-category" name="category" maxlength="120" placeholder="Trail running footwear" required />
+                    </label>
+                    <div class="form-grid two-up">
+                      <label>
+                        <span>Price Point</span>
+                        <input id="brief-price-point" name="price_point" maxlength="120" placeholder="$165 premium performance" required />
+                      </label>
+                      <label>
+                        <span>Launch Season <em>optional</em></span>
+                        <input id="brief-launch-season" name="launch_season" maxlength="120" placeholder="Spring 2027" />
+                      </label>
+                    </div>
+                    <div class="form-grid two-up">
+                      <label>
+                        <span>Primary Market</span>
+                        <input id="brief-geo-market" name="geo_market" maxlength="120" placeholder="United States specialty run channel" required />
+                      </label>
+                      <label>
+                        <span>Competitive Set <em>optional</em></span>
+                        <input id="brief-competitive-set" name="competitive_set" maxlength="240" placeholder="Hoka Speedgoat, Nike Zegama, Salomon Genesis" />
+                      </label>
+                    </div>
+                  </section>
+
+                  <section class="brief-step-panel hidden" data-brief-step="2">
+                    <div class="card-heading">
+                      <h3>Step 2: Customer and constraints</h3>
+                      <p>Describe who this is for and any realities the concept must respect.</p>
+                    </div>
+                    <label>
+                      <span>Consumer Profile</span>
+                      <textarea id="brief-consumer-profile" name="consumer_profile" rows="4" placeholder="Who is this for, what do they need, and what moment are they buying for?" required></textarea>
+                    </label>
+                    <label>
+                      <span>Brand Guardrails <em>optional</em></span>
+                      <textarea id="brief-brand-guardrails" name="brand_guardrails" rows="2" placeholder="What must stay true to the brand, aesthetic, and positioning?"></textarea>
+                    </label>
+                    <label>
+                      <span>Constraints <em>optional</em></span>
+                      <textarea id="brief-constraints" name="constraints" rows="2" placeholder="Commercial, sourcing, technical, timeline, or regulatory constraints."></textarea>
+                    </label>
+                    <label>
+                      <span>Uploaded Docs <em>optional</em></span>
+                      <input id="brief-uploaded-docs" name="uploaded_docs" maxlength="240" placeholder="deck_v8.pdf, line_plan.xlsx, category_review.docx" />
+                    </label>
+                    <label>
+                      <span>Open Context <em>optional</em></span>
+                      <textarea id="brief-open-context" name="open_context" rows="4" placeholder="Any additional context, objective framing, or product nuance."></textarea>
+                    </label>
+                  </section>
+
+                  <section class="brief-step-panel hidden" data-brief-step="3">
+                    <div class="card-heading">
+                      <h3>Step 3: Review and generate</h3>
+                      <p>Review the generated summary, make edits only if needed, then generate the first intelligence outputs.</p>
+                    </div>
+                    <div class="summary-preview">
+                      <div class="summary-preview-header">
+                        <div>
+                          <h4>Generated Brief Summary</h4>
+                          <p class="small">Auto-composed from the structured brief.</p>
+                        </div>
+                        <button id="toggle-summary-edit" type="button" class="ghost">Edit Summary</button>
+                      </div>
+                      <div id="summary-preview-text" class="summary-preview-text"></div>
+                      <label id="summary-edit-wrap" class="hidden">
+                        <span>Editable Summary</span>
+                        <textarea id="project-brief" name="brief" rows="6" placeholder="This summary is auto-composed from the smart brief and can be edited before project creation." required></textarea>
+                      </label>
+                    </div>
+                  </section>
+
+                  <div class="brief-nav">
+                    <button id="brief-prev-button" type="button" class="ghost">Back</button>
+                    <button id="brief-next-button" type="button" class="ghost">Next</button>
+                    <button id="brief-submit-button" type="submit">Create Project + Generate Brief Insights</button>
+                  </div>
                 </form>
                 <div id="create-locked" class="empty-state compact-empty">Log in to create and view your projects.</div>
               </section>
@@ -214,6 +308,15 @@
 
                   <section class="detail-overview">
                     <div class="stage-main">
+                      <section id="quickstart-panel" class="quickstart-panel hidden">
+                        <div class="quickstart-copy">
+                          <span class="pill">First session</span>
+                          <h3 id="quickstart-title">Review your first brief insights</h3>
+                          <p id="quickstart-description">Ada IQ has already generated the opening intelligence pass. Start by reviewing the outputs below, then decide whether to advance the project.</p>
+                        </div>
+                        <div id="quickstart-steps" class="quickstart-steps"></div>
+                      </section>
+
                       <div class="status-strip">
                         <div>
                           <span class="label">Current Phase</span>
@@ -250,6 +353,34 @@
                       </section>
 
                       <p id="detail-brief" class="brief"></p>
+
+                      <section class="insight-panel card-subsection">
+                        <div class="card-heading">
+                          <h3>Smart Product Brief</h3>
+                          <p>Structured intake modules generated from the new brief workflow.</p>
+                        </div>
+                        <div class="brief-export-actions">
+                          <button id="export-smart-brief-button" type="button" class="ghost">Load Brief Export</button>
+                          <button id="open-smart-brief-report-button" type="button" class="ghost">Open Brief Report</button>
+                          <button id="download-smart-brief-button" type="button" class="ghost">Download Brief JSON</button>
+                        </div>
+                        <div id="smart-brief-editor" class="hidden smart-brief-editor">
+                          <div class="summary-preview-header">
+                            <div>
+                              <h4 id="smart-brief-editor-title">Edit Module</h4>
+                              <p class="small">Versioned module update tracked in the project audit log.</p>
+                            </div>
+                            <button id="cancel-smart-brief-edit-button" type="button" class="ghost">Cancel</button>
+                          </div>
+                          <label>
+                            <span>Module Content</span>
+                            <textarea id="smart-brief-editor-content" rows="8"></textarea>
+                          </label>
+                          <button id="save-smart-brief-edit-button" type="button">Save Module Update</button>
+                        </div>
+                        <div id="smart-brief-export" class="hidden"></div>
+                        <div id="smart-brief-modules" class="card-stack compact"></div>
+                      </section>
                     </div>
 
                     <aside class="stage-side">
@@ -264,7 +395,7 @@
                             <button id="run-v1-button" type="button">Run V1 Package</button>
                             <button id="approve-button" type="button">Approve Gate</button>
                           </div>
-                          <div class="actions secondary-actions">
+                          <div id="advanced-actions" class="actions secondary-actions">
                             <button id="refresh-button" type="button" class="ghost">Refresh</button>
                             <button id="queue-phase-button" type="button" class="ghost">Queue Current Phase</button>
                             <button id="run-full-cycle-button" type="button">Run Full Cycle</button>
@@ -275,6 +406,7 @@
                           <span>Decision Feedback</span>
                           <textarea id="decision-feedback" rows="3" placeholder="Add reviewer notes when approving or rejecting a gate."></textarea>
                         </label>
+                        <div id="compliance-summary" class="workflow-callout compliance-callout"></div>
                       </section>
                     </aside>
                   </section>

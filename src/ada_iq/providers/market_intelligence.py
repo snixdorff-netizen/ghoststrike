@@ -120,17 +120,18 @@ PROFILES: dict[str, MarketProfile] = {
 
 class MarketIntelligenceProvider(ABC):
     @abstractmethod
-    def analyze(self, project_name: str, brief: str) -> dict:
+    def analyze(self, project_name: str, brief: str, smart_brief: dict | None = None) -> dict:
         raise NotImplementedError
 
 
 class MockMarketIntelligenceProvider(MarketIntelligenceProvider):
     """Deterministic provider that mimics an external research service boundary."""
 
-    def analyze(self, project_name: str, brief: str) -> dict:
-        profile = self._pick_profile(brief)
-        segment = self._extract_segment(brief)
-        geography = self._extract_geography(brief)
+    def analyze(self, project_name: str, brief: str, smart_brief: dict | None = None) -> dict:
+        profile = self._pick_profile(brief, smart_brief)
+        segment = self._extract_segment(brief, smart_brief)
+        geography = self._extract_geography(brief, smart_brief)
+        competitive_set = self._extract_competitors(profile, smart_brief)
 
         tam = profile.tam_billions
         sam = round(tam * profile.sam_share, 2)
@@ -169,7 +170,7 @@ class MockMarketIntelligenceProvider(MarketIntelligenceProvider):
                     "som_billion_usd": som,
                 },
                 "five_year_cagr": profile.cagr,
-                "top_competitors": list(profile.competitors),
+                "top_competitors": competitive_set,
                 "trend_signals": list(profile.trends),
                 "whitespace_opportunity": profile.whitespace,
                 "recommended_next_action": (
@@ -183,7 +184,14 @@ class MockMarketIntelligenceProvider(MarketIntelligenceProvider):
             },
         }
 
-    def _pick_profile(self, brief: str) -> MarketProfile:
+    def _pick_profile(self, brief: str, smart_brief: dict | None = None) -> MarketProfile:
+        category = str((smart_brief or {}).get("category", "")).lower()
+        if "footwear" in category or "shoe" in category:
+            return PROFILES["footwear"]
+        if "hydration" in category or "trail" in category:
+            return PROFILES["hydration"]
+        if "kitchen" in category or "appliance" in category:
+            return PROFILES["kitchen"]
         lower_brief = brief.lower()
         if any(term in lower_brief for term in ("shoe", "footwear", "sneaker", "loafer")):
             return PROFILES["footwear"]
@@ -193,7 +201,9 @@ class MockMarketIntelligenceProvider(MarketIntelligenceProvider):
             return PROFILES["kitchen"]
         return PROFILES["default"]
 
-    def _extract_segment(self, brief: str) -> str:
+    def _extract_segment(self, brief: str, smart_brief: dict | None = None) -> str:
+        if smart_brief and smart_brief.get("consumer_profile"):
+            return str(smart_brief["consumer_profile"]).strip()
         match = re.search(r"targeting ([^.]+?)(?: who| with| focused|\.|,)", brief, re.IGNORECASE)
         if match:
             return match.group(1).strip()
@@ -202,10 +212,17 @@ class MockMarketIntelligenceProvider(MarketIntelligenceProvider):
             return match.group(1).strip()
         return "high-intent early adopters"
 
-    def _extract_geography(self, brief: str) -> str:
+    def _extract_geography(self, brief: str, smart_brief: dict | None = None) -> str:
+        if smart_brief and smart_brief.get("geo_market"):
+            return str(smart_brief["geo_market"]).strip()
         lower_brief = brief.lower()
         if "us" in lower_brief or "united states" in lower_brief or "north america" in lower_brief:
             return "North America"
         if "europe" in lower_brief or "eu" in lower_brief:
             return "Europe"
         return "Initial domestic launch"
+
+    def _extract_competitors(self, profile: MarketProfile, smart_brief: dict | None = None) -> list[str]:
+        if smart_brief and smart_brief.get("competitive_set"):
+            return [str(item).strip() for item in smart_brief["competitive_set"] if str(item).strip()]
+        return list(profile.competitors)
