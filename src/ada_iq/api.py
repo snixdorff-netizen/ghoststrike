@@ -130,7 +130,7 @@ def _render_smart_brief_report(package: dict) -> str:
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <title>{escape(package.get('project_name', 'Smart Product Brief'))}</title>
+        <title>{escape(package.get('project_name', 'Ada Brief'))}</title>
         <style>
           @media print {{
             .report-toolbar {{ display:none !important; }}
@@ -144,7 +144,7 @@ def _render_smart_brief_report(package: dict) -> str:
             <button onclick="window.print()" style="border:1px solid #ddd;background:#fff;padding:10px 14px;border-radius:10px;cursor:pointer;">Print / Save PDF</button>
           </div>
           <header style="margin-bottom:32px;padding:28px;border-radius:20px;background:#111;color:#fff;">
-            <p style="margin:0 0 10px;color:#f25b6b;letter-spacing:.14em;text-transform:uppercase;font-size:12px;">{escape(settings.report_brand_title)} Smart Product Brief</p>
+            <p style="margin:0 0 10px;color:#f25b6b;letter-spacing:.14em;text-transform:uppercase;font-size:12px;">{escape(settings.report_brand_title)} Ada Brief</p>
             <h1 style="margin:0 0 12px;font-size:42px;line-height:1.1;">{escape(package.get('project_name', 'Project'))}</h1>
             <p style="margin:0;line-height:1.7;color:#ddd;">{escape(package.get('summary', ''))}</p>
           </header>

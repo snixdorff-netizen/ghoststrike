@@ -4,6 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ada IQ Private Preview</title>
+    <script>
+      if (window.localStorage.getItem("ada_iq_token")) {
+        document.documentElement.classList.add("has-token");
+      }
+    </script>
     <link rel="stylesheet" href="/app.css" />
   </head>
   <body>
@@ -181,7 +186,7 @@
               <section class="card create-card">
                 <div class="card-heading">
                   <h2>Start New Project</h2>
-                  <p>Build a Smart Product Brief in three short steps, then generate the first round of intelligence automatically.</p>
+                  <p>Build an Ada Brief in three short steps, then generate the first round of intelligence automatically.</p>
                 </div>
                 <form id="create-form" class="stack hidden">
                   <div class="brief-intro">
@@ -269,15 +274,15 @@
                     <div class="summary-preview">
                       <div class="summary-preview-header">
                         <div>
-                          <h4>Generated Brief Summary</h4>
-                          <p class="small">Auto-composed from the structured brief.</p>
+                          <h4>Ada Brief Summary</h4>
+                          <p class="small">Your Product Intelligence Brief, auto-composed from the structured brief.</p>
                         </div>
                         <button id="toggle-summary-edit" type="button" class="ghost">Edit Summary</button>
                       </div>
                       <div id="summary-preview-text" class="summary-preview-text"></div>
                       <label id="summary-edit-wrap" class="hidden">
                         <span>Editable Summary</span>
-                        <textarea id="project-brief" name="brief" rows="6" placeholder="This summary is auto-composed from the smart brief and can be edited before project creation." required></textarea>
+                        <textarea id="project-brief" name="brief" rows="6" placeholder="This summary is auto-composed from the Ada Brief and can be edited before project creation." required></textarea>
                       </label>
                     </div>
                   </section>
@@ -356,13 +361,13 @@
 
                       <section class="insight-panel card-subsection">
                         <div class="card-heading">
-                          <h3>Smart Product Brief</h3>
-                          <p>Structured intake modules generated from the new brief workflow.</p>
+                          <h3>Ada Brief</h3>
+                          <p>Your Product Intelligence Brief, generated from the structured intake workflow.</p>
                         </div>
                         <div class="brief-export-actions">
-                          <button id="export-smart-brief-button" type="button" class="ghost">Load Brief Export</button>
-                          <button id="open-smart-brief-report-button" type="button" class="ghost">Open Brief Report</button>
-                          <button id="download-smart-brief-button" type="button" class="ghost">Download Brief JSON</button>
+                          <button id="export-smart-brief-button" type="button" class="ghost">Load Ada Brief</button>
+                          <button id="open-smart-brief-report-button" type="button" class="ghost">Open Ada Brief Report</button>
+                          <button id="download-smart-brief-button" type="button" class="ghost">Download Ada Brief JSON</button>
                         </div>
                         <div id="smart-brief-editor" class="hidden smart-brief-editor">
                           <div class="summary-preview-header">

@@ -1059,6 +1059,17 @@ body.logged-in .guest-stage {
   display: none;
 }
 
+html.has-token .guest-stage {
+  display: none;
+}
+
+html.has-token .dashboard-shell,
+html.has-token .sidebar-projects,
+html.has-token .dashboard-stats,
+html.has-token .dashboard-head {
+  display: grid;
+}
+
 body:not(.logged-in) .dashboard-shell,
 body:not(.logged-in) .sidebar-projects,
 body:not(.logged-in) .secondary-canvas,

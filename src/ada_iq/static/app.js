@@ -10,7 +10,7 @@ const SAMPLE_BRIEF = {
     constraints: "Need launch-ready concept framing within one planning cycle and must stay inside premium-margin targets.",
     launch_season: "Spring 2027",
     uploaded_docs: ["trail_category_review.pdf", "consumer_signal_summary.docx"],
-    open_context: "Use this as the seed Smart Product Brief to validate the new intake flow, research prompts, and downstream recommendation quality.",
+    open_context: "Use this as the seed Ada Brief to validate the new intake flow, research prompts, and downstream recommendation quality.",
   },
 };
 
@@ -269,7 +269,7 @@ function actionState(snapshot) {
       canRunPackage: true,
       canRunFullCycle: true,
       canDecide: false,
-      hint: "Generate Brief Insights first. That creates the initial Smart Product Brief intelligence package and opens the first review gate.",
+      hint: "Generate Brief Insights first. That creates the initial Ada Brief intelligence package and opens the first review gate.",
     };
   }
 
@@ -304,13 +304,13 @@ function renderQuickstartPanel(snapshot) {
   const gatePending = snapshot.project.gate.status === "PENDING";
   title.textContent = gatePending ? "Review your first brief insights" : "Generate your first brief insights";
   description.textContent = gatePending
-    ? "Ada IQ has already generated the first intelligence package from your Smart Product Brief. Review the outputs below, confirm the brief framing, then either advance or revise."
-    : "Your Smart Product Brief is ready. Generate the first intelligence package to turn the brief into a decision-ready starting point.";
+    ? "Ada IQ has already generated the first intelligence package from your Ada Brief. Review the outputs below, confirm the brief framing, then either advance or revise."
+    : "Your Ada Brief is ready. Generate the first intelligence package to turn it into a decision-ready starting point.";
 
   const checklist = gatePending
     ? [
         { title: "1. Scan the outputs", detail: "Start with Ada Scout and Ada Empath to check whether the brief is pointed at the right market and customer." },
-        { title: "2. Confirm the brief framing", detail: "Use the Smart Product Brief modules to check that the summary, constraints, and strategic direction match your intent." },
+        { title: "2. Confirm the brief framing", detail: "Use the Ada Brief modules to check that the summary, constraints, and strategic direction match your intent." },
         { title: "3. Advance or revise", detail: "Approve to move forward, or revise the brief if the first pass is off target." },
       ]
     : [
@@ -331,6 +331,7 @@ function renderAuth() {
   const registrationOpen = state.access ? state.access.open_registration : true;
   const demoEnabled = Boolean(state.access && state.access.demo_account_enabled);
   const publicDemoEnabled = Boolean(state.access && state.access.public_demo_access_enabled);
+  document.documentElement.classList.toggle("has-token", loggedIn || Boolean(state.token));
   document.body.classList.toggle("logged-in", loggedIn);
   document.getElementById("auth-status").textContent = loggedIn
     ? `Logged in as ${state.user.email} (${state.user.role})`
@@ -648,7 +649,7 @@ function renderSmartBrief(snapshot) {
   const smartBrief = snapshot.project.smart_brief;
 
   if (!smartBrief) {
-    container.innerHTML = '<div class="empty-state compact-empty">This project was created before the Smart Product Brief workflow.</div>';
+    container.innerHTML = '<div class="empty-state compact-empty">This project was created before the Ada Brief workflow.</div>';
   } else {
     container.innerHTML = (smartBrief.modules || [])
       .map((module) => `<article class="card">
@@ -667,7 +668,7 @@ function renderSmartBrief(snapshot) {
     const exportPayload = state.smartBriefExport.smart_brief_export;
     exportContainer.classList.remove("hidden");
     exportContainer.innerHTML = `<article class="card smart-brief-export-card">
-      <h4>Brief Export Snapshot</h4>
+      <h4>Ada Brief Snapshot</h4>
       <p>${escapeHtml(exportPayload.summary || "")}</p>
       <p class="small">Modules: ${escapeHtml((exportPayload.modules || []).length)} · Tenant: ${escapeHtml(exportPayload.tenant_id || "preview")}</p>
     </article>`;
@@ -908,7 +909,7 @@ async function loadSmartBriefExport() {
   if (!state.selectedProjectId) return;
   state.smartBriefExport = await api(`/projects/${state.selectedProjectId}/smart-brief`);
   renderProjectDetail();
-  showNotice("Loaded Smart Product Brief export snapshot.", "success");
+  showNotice("Loaded Ada Brief snapshot.", "success");
 }
 
 async function saveSmartBriefEdit() {
@@ -921,7 +922,7 @@ async function saveSmartBriefEdit() {
   state.selectedSnapshot = await api(`/projects/${state.selectedProjectId}`);
   cancelSmartBriefEdit();
   renderProjectDetail();
-  showNotice("Smart Product Brief module updated.", "success");
+  showNotice("Ada Brief module updated.", "success");
 }
 
 async function downloadSmartBriefExport() {
@@ -931,14 +932,14 @@ async function downloadSmartBriefExport() {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `${packagePayload.project_name || "smart-brief"}`.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-smart-brief.json";
+  link.download = `${packagePayload.project_name || "ada-brief"}`.toLowerCase().replace(/[^a-z0-9]+/g, "-") + "-ada-brief.json";
   document.body.appendChild(link);
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
   state.smartBriefExport = packagePayload;
   renderProjectDetail();
-  showNotice("Downloaded Smart Product Brief package.", "success");
+  showNotice("Downloaded Ada Brief package.", "success");
 }
 
 function openSmartBriefReport() {
@@ -1149,7 +1150,7 @@ function fillSampleBrief() {
   document.getElementById("brief-open-context").value = SAMPLE_BRIEF.smart_brief.open_context;
   syncGeneratedBrief();
   setBriefStep(3);
-  showNotice("Loaded the sample smart brief into the project form.", "info");
+  showNotice("Loaded the sample Ada Brief into the project form.", "info");
 }
 
 function fillDemoLogin() {
