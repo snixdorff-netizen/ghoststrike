@@ -192,8 +192,22 @@ a {
 }
 
 .sidebar-link {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: left;
   padding: 6px 4px;
   font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.sidebar-link:hover {
+  color: var(--accent-strong);
+}
+
+.sidebar-link.active {
+  color: var(--accent-strong);
+  font-weight: 700;
 }
 
 .sidebar-projects {

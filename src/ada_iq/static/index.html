@@ -23,7 +23,7 @@
         </div>
 
         <nav class="sidebar-nav">
-          <button type="button" class="nav-item nav-item-active">
+          <button type="button" class="nav-item nav-item-active" data-nav-target="dashboard-top">
             <span class="nav-icon">◫</span>
             <span>Projects</span>
           </button>
@@ -32,21 +32,21 @@
         <section class="sidebar-section">
           <p class="sidebar-label">Insights</p>
           <div class="sidebar-links">
-            <div class="sidebar-link">Product Performance</div>
-            <div class="sidebar-link">Team Performance</div>
-            <div class="sidebar-link">Leadership Dashboard</div>
-            <div class="sidebar-link">Compare Products</div>
-            <div class="sidebar-link">Consumer Insights</div>
-            <div class="sidebar-link">Whitespace Research</div>
+            <button type="button" class="sidebar-link" data-nav-target="output-stage">Product Performance</button>
+            <button type="button" class="sidebar-link" data-nav-target="collaboration-panel">Team Performance</button>
+            <button type="button" class="sidebar-link" data-nav-target="admin-panel">Leadership Dashboard</button>
+            <button type="button" class="sidebar-link" data-nav-target="dashboard-stats">Compare Products</button>
+            <button type="button" class="sidebar-link" data-nav-target="smart-brief-section">Consumer Insights</button>
+            <button type="button" class="sidebar-link" data-nav-target="output-stage">Whitespace Research</button>
           </div>
         </section>
 
         <section class="sidebar-section">
           <p class="sidebar-label">Workspace</p>
           <div class="sidebar-links">
-            <div class="sidebar-link">Concept Generation</div>
-            <div class="sidebar-link">Evaluation</div>
-            <div class="sidebar-link">Launch Planning</div>
+            <button type="button" class="sidebar-link" data-nav-target="workflow-panel">Concept Generation</button>
+            <button type="button" class="sidebar-link" data-nav-target="message-stage">Evaluation</button>
+            <button type="button" class="sidebar-link" data-nav-target="feedback-panel">Launch Planning</button>
           </div>
         </section>
 
@@ -167,7 +167,7 @@
           </section>
         </section>
 
-        <section class="dashboard-shell">
+        <section id="dashboard-top" class="dashboard-shell">
           <div class="dashboard-head">
             <div>
               <h1 id="dashboard-title" class="dashboard-title">Ada IQ Projects Dashboard</h1>
@@ -186,7 +186,7 @@
               <section class="card create-card">
                 <div class="card-heading">
                   <h2>Start New Project</h2>
-                  <p>Build an Ada Brief in three short steps, then generate the first round of intelligence automatically.</p>
+                  <p>Build a Product Intelligence Brief in three short steps, then generate the first round of intelligence automatically.</p>
                 </div>
                 <form id="create-form" class="stack hidden">
                   <div class="brief-intro">
@@ -274,7 +274,7 @@
                     <div class="summary-preview">
                       <div class="summary-preview-header">
                         <div>
-                          <h4>Ada Brief Summary</h4>
+                          <h4>Product Intelligence Brief Summary</h4>
                           <p class="small">Your Product Intelligence Brief, auto-composed from the structured brief.</p>
                         </div>
                         <button id="toggle-summary-edit" type="button" class="ghost">Edit Summary</button>
@@ -282,7 +282,7 @@
                       <div id="summary-preview-text" class="summary-preview-text"></div>
                       <label id="summary-edit-wrap" class="hidden">
                         <span>Editable Summary</span>
-                        <textarea id="project-brief" name="brief" rows="6" placeholder="This summary is auto-composed from the Ada Brief and can be edited before project creation." required></textarea>
+                        <textarea id="project-brief" name="brief" rows="6" placeholder="This summary is auto-composed from the Product Intelligence Brief and can be edited before project creation." required></textarea>
                       </label>
                     </div>
                   </section>
@@ -349,7 +349,7 @@
                         <div id="phase-rail" class="phase-rail"></div>
                       </section>
 
-                      <section class="insight-panel card-subsection">
+                      <section id="smart-brief-section" class="insight-panel card-subsection">
                         <div class="card-heading">
                           <h3>Project Snapshot</h3>
                           <p>A quick read on project momentum, ownership, and next action.</p>
@@ -361,13 +361,13 @@
 
                       <section class="insight-panel card-subsection">
                         <div class="card-heading">
-                          <h3>Ada Brief</h3>
+                          <h3>Product Intelligence Brief</h3>
                           <p>Your Product Intelligence Brief, generated from the structured intake workflow.</p>
                         </div>
                         <div class="brief-export-actions">
-                          <button id="export-smart-brief-button" type="button" class="ghost">Load Ada Brief</button>
-                          <button id="open-smart-brief-report-button" type="button" class="ghost">Open Ada Brief Report</button>
-                          <button id="download-smart-brief-button" type="button" class="ghost">Download Ada Brief JSON</button>
+                          <button id="export-smart-brief-button" type="button" class="ghost">Load Brief</button>
+                          <button id="open-smart-brief-report-button" type="button" class="ghost">Open Brief Report</button>
+                          <button id="download-smart-brief-button" type="button" class="ghost">Download Brief JSON</button>
                         </div>
                         <div id="smart-brief-editor" class="hidden smart-brief-editor">
                           <div class="summary-preview-header">
@@ -389,7 +389,7 @@
                     </div>
 
                     <aside class="stage-side">
-                      <section class="workflow-panel">
+                      <section id="workflow-panel" class="workflow-panel">
                         <div class="card-heading">
                           <h3>Workflow Actions</h3>
                           <div id="action-hint">Select a project to begin.</div>
@@ -418,12 +418,12 @@
 
                   <div class="content-grid">
                     <section class="content-main">
-                      <section class="output-stage">
+                      <section id="output-stage" class="output-stage">
                         <h3>Agent Outputs</h3>
                         <p class="section-copy">Decision-oriented summaries from the current workflow state.</p>
                         <div id="outputs" class="card-stack"></div>
                       </section>
-                      <section class="support-stage">
+                      <section id="message-stage" class="support-stage">
                         <h3>Message Log</h3>
                         <p class="section-copy">Runs, messages, and handoffs across the workflow.</p>
                         <div id="messages" class="card-stack compact"></div>
@@ -431,7 +431,7 @@
                     </section>
 
                     <aside class="content-side">
-                      <section class="card side-card">
+                      <section id="collaboration-panel" class="card side-card">
                         <h3>Collaboration</h3>
                         <p class="section-copy">Manage ownership, shared access, and invitation tokens.</p>
                         <div id="collaborator-list" class="card-stack compact"></div>
@@ -452,7 +452,7 @@
                         <div id="invitation-list" class="card-stack compact"></div>
                       </section>
 
-                      <section class="card side-card">
+                      <section id="feedback-panel" class="card side-card">
                         <h3>Preview Notes</h3>
                         <p class="section-copy">Capture what felt strong, what felt weak, and what deserves a deeper product conversation.</p>
                         <form id="feedback-form" class="stack">
