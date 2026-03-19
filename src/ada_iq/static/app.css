@@ -191,21 +191,28 @@ a {
   font-size: 0.72rem;
 }
 
-.sidebar-link {
+.sidebar-links .sidebar-link {
   width: 100%;
-  border: 0;
-  background: transparent;
-  text-align: left;
+  display: block;
   padding: 6px 4px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
   font-size: 0.95rem;
+  font-weight: 500;
   cursor: pointer;
+  box-shadow: none;
 }
 
-.sidebar-link:hover {
+.sidebar-links .sidebar-link:hover {
+  background: transparent;
   color: var(--accent-strong);
 }
 
-.sidebar-link.active {
+.sidebar-links .sidebar-link.active {
+  background: transparent;
   color: var(--accent-strong);
   font-weight: 700;
 }
