@@ -148,10 +148,41 @@ function activateSidebarTarget(targetId) {
   });
 }
 
-function navigateToSection(targetId) {
+function flashSection(target) {
+  target.classList.remove("section-focus");
+  void target.offsetWidth;
+  target.classList.add("section-focus");
+  window.setTimeout(() => target.classList.remove("section-focus"), 1400);
+}
+
+async function navigateToSection(targetId) {
+  const projectScopedTargets = new Set([
+    "output-stage",
+    "collaboration-panel",
+    "smart-brief-section",
+    "workflow-panel",
+    "message-stage",
+    "feedback-panel",
+  ]);
+  if (targetId === "admin-panel" && (!state.user || state.user.role !== "ADMIN")) {
+    showNotice("Leadership Dashboard is available to admin users only in this preview.", "info");
+    return;
+  }
+  if (projectScopedTargets.has(targetId) && !state.selectedSnapshot) {
+    if (!state.user) {
+      showNotice("Log in and open a project to view this section.", "info");
+      return;
+    }
+    if (!state.projects.length) {
+      showNotice("Create or open a project first to use this section.", "info");
+      return;
+    }
+    await selectProject(state.projects[0].project_id);
+  }
   const target = document.getElementById(targetId);
   if (!target) return;
   target.scrollIntoView({ behavior: "smooth", block: "start" });
+  flashSection(target);
   activateSidebarTarget(targetId);
 }
 
@@ -1193,7 +1224,9 @@ async function demoAccess() {
 
 function bindEvents() {
   document.querySelectorAll("[data-nav-target]").forEach((node) => {
-    node.addEventListener("click", () => navigateToSection(node.dataset.navTarget));
+    node.addEventListener("click", async () => {
+      await navigateToSection(node.dataset.navTarget);
+    });
   });
 
   document.getElementById("login-form").addEventListener("submit", async (event) => {

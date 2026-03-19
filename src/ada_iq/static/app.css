@@ -217,6 +217,11 @@ a {
   font-weight: 700;
 }
 
+.section-focus {
+  box-shadow: 0 0 0 2px rgba(245, 53, 71, 0.18), 0 18px 42px rgba(245, 53, 71, 0.08);
+  transition: box-shadow 160ms ease;
+}
+
 .sidebar-projects {
   display: grid;
   grid-template-rows: auto auto 1fr;
